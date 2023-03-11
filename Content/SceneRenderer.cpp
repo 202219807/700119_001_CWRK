@@ -122,6 +122,15 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
+	D3D11_VIEWPORT viewport;
+	UINT numViewports = 1;
+	context->RSGetViewports(&numViewports, &viewport);
+
+	int viewportWidth = (int)viewport.Width;
+	int viewportHeight = (int)viewport.Height;
+	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
+	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+
 	// Prepare the constant and timer buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
