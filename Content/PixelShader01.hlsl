@@ -276,22 +276,8 @@ Obj rayMarch(Ray ray)
     return hitObj;
 }
 
-// calculates the intersection of the given plane and ray
-vec3 intersectPlane(vec3 ori, vec3 dir, vec3 planePos)
-{
-    
-    vec3 planeNormal = vec3(0, 1, 0);
-    
-    float a = dot(dir, planeNormal);
-   
-    float distToPlane = dot(ori - planePos, planeNormal);
-    vec3 intersectPt = ori + dir * abs(distToPlane / a);
-    
-    return intersectPt;
-}
-
 mat3 lookAt(vec3 origin, vec3 target, float roll)
-{ 
+{
     vec3 rr = vec3(sin(roll), cos(roll), 0.0);
     vec3 ww = normalize(target - origin);
     vec3 uu = normalize(cross(ww, rr));
@@ -316,12 +302,6 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     // update primary ray
     ray.o = camPos;
     ray.d = normalize(mul(camMat, vec3(uv.xy, 1.0)));
-    // ray.d = normalize(mul(camMat, vec3(uv.xy, 1.0)));
-    // ray.d = normalize(float3(
-    //                    dot(camMat[0], float3(uv.xy, 1.0)), 
-    //                    dot(camMat[1], float3(uv.xy, 1.0)),
-    //                    dot(camMat[2], float3(uv.xy, 1.0))
-    //                ));
     
     vec3 col = vec3(1.0, 1.0, 1.0);
     
@@ -332,7 +312,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     {
         // to tune the horizon light
         col = lerp(vec3(0.01, 0.01, 0.01),
-            HORIZON_COLOR, 
+            HORIZON_COLOR,
             pow(1.0 - pow(ray.d.y, 4.), 0.1)
         );
     }
@@ -360,7 +340,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 }
 
 float4 main(VS_Canvas In) : SV_Target
-{   
+{
     // specify primary ray: 
     Ray eyeray;
 
@@ -378,5 +358,4 @@ float4 main(VS_Canvas In) : SV_Target
   
     return fragColor;
 }
-
 

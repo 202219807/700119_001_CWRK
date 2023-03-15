@@ -16,7 +16,7 @@ VS_Canvas main(float4 vPos : POSITION)
 {
     VS_Canvas Output;
  
-    Output.Position = float4(sign(vPos.xy), 0, 1);
+    Output.Position = float4(sign(vPos.xy), 0, 3);
    
     float AspectRatio = projection._m11 / projection._m00;
     Output.canvasXY = sign(vPos.xy) * float2(AspectRatio, 1.0);

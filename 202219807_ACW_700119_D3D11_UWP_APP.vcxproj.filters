@@ -85,5 +85,17 @@
     <FxCompile Include="Content\PixelShader01.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
+    <FxCompile Include="VertexShader01.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader02.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="P01_VS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="P01_PS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
