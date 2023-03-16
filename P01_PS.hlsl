@@ -39,29 +39,20 @@ struct Ray
     float3 d; // direction 
 };
 
+/** 
+* Mathematics utilities:
+* Noise functions, Transformations and Soft blending
+*/
 
 /**
- * Return the normalized direction to march in from the eye point for a single pixel.
- * 
- * ro: eye position
- * lookAt: lookat position
- * uv: the x,y coordinate of the pixel in the output image
- */
-
-vec3 rayDirection(vec3 ro, vec3 lookAt, vec2 uv)
-{
-    vec3 forward = normalize(lookAt - ro);
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
-    vec3 up = cross(forward, right);
-    return normalize(forward + right * uv.x + up * uv.y);
-}
-
+* Noise function sampled from:
+* https://www.shadertoy.com/view/WdByRR 
+*/
 float hash(float n)
 {
     return frac(sin(n) * 43758.5453);
 }
 
-//Hash from iq
 float noise(in vec3 x)
 {
     vec3 p = floor(x);
@@ -85,7 +76,7 @@ float noise(in vec3 x)
     return res;
 }
 
-// Rotation
+/* Rotation */ 
 mat2 rot(float a)
 {
     float c = cos(a);
@@ -93,13 +84,13 @@ mat2 rot(float a)
     return mat2(c, s, -s, c);
 }
 
-// Minimum
+/* Minimum */
 vec2 min2(vec2 a, vec2 b)
 {
     return a.x < b.x ? a : b;
 }
 
-// Soft minimum
+/* Soft minimum */
 float smin(float a, float b, float k)
 {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -169,23 +160,23 @@ float bubbleSDF(vec3 p, float t)
 
 float plantSDF(vec3 p, float h)
 {
-    float r = 0.04 * -(p.y + 2.5) - 0.005 * pow(sin(p.y * 10.0), 2.0);
-    p.z += sin(TIME * 0.5 + h) * pow(0.2 * (p.y + 1.6), 3.0);
-    return rodSDF(p + vec3(0.0, 5.7, 0.0), 25.0 * h, r);
+    float r = 0.04 * -(p.y + 2.5) - 0.005 * pow(sin(p.y * 10.0), 4.0);
+    p.z += sin(TIME * 0.5 + h) * pow(0.2 * (p.y + 5.6), 3.0);
+    return rodSDF(p + vec3(0.0, 5.7, 0.0), 5.0 * h, r);
 }
 
 float plantsSDF(vec3 p)
 {
-    vec3 dd = vec3(-0.5, -0.2, -1.0);
+    vec3 dd = vec3(-0.3, -0.5, -0.5);
     
     // Make multiple copies, each one displaced and rotated.
     float d = 1e10;
     for (int i = 0; i < 8; i++)
     {
-        d = min(d, min(plantSDF(p, 0.0), min(plantSDF(p + dd.xyx, 3.5), plantSDF(p + dd, 5.0))));
+        d = min(d, min(plantSDF(p, 0.0), min(plantSDF(p + dd.xyx, 5.0), plantSDF(p + dd, 3.0))));
         p.x -= 0.01;
-        p.z -= 0.05;
-        p.xz = mul(p.xz, rot(0.8));
+        p.z -= 0.06;
+        p.xz = mul(p.xz, rot(0.7));
     }
     
     return d;
@@ -209,31 +200,15 @@ float2 sceneSDF(vec3 p)
     
     return min2(vec2(surface, 1.0),
            min2(vec2(floorSDF(p), 2.5),
-           min2(vec2(plantsSDF(p - vec3(2.0, 0.0, -2.0)), 5.5),
+           min2(vec2(plantsSDF(p - vec3(0.0, 0.0, 0.0)), 5.5),
            min2(vec2(bubbleSDF(pp, TIME - 0.8), 4.5),
                 vec2(bubbleSDF(pp, TIME), 2.5)))));
 }
 
 /**
- * Using the gradient of the SDF, estimate the normal on the surface at point p.
+ * Adv. effects:
+ * Caustics, God Rays and Ambient Occulsion
  */
-vec3 estimateNormal(vec3 p)
-{
-    vec2 e = vec2(1.0, -1.0) * 0.0025;
-    return normalize(e.xyy * sceneSDF(p + e.xyy).x +
-					 e.yyx * sceneSDF(p + e.yyx).x +
-					 e.yxy * sceneSDF(p + e.yxy).x +
-					 e.xxx * sceneSDF(p + e.xxx).x);
-}
-
-vec3 getRayDir(vec3 ro, vec3 lookAt, vec2 uv)
-{
-    vec3 forward = normalize(lookAt - ro);
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
-    vec3 up = cross(forward, right);
-    return normalize(forward + right * uv.x + up * uv.y);
-}
-
 float caustic(vec3 p)
 {
     return abs(noise(p + fmod(TIME, 40.0) * 2.0) - noise(p + vec3(4.0, 0.0, 4.0) + fmod(TIME, 40.0) * 1.0));
@@ -249,13 +224,7 @@ float godLight(vec3 p, vec3 lightPos)
     return smoothstep(0.2, 1.0, f * 0.7);
 }
 
-float calcOcc(vec3 p, vec3 n)
-{
-    const float dist = 0.5;
-    return smoothstep(0.0, 1.0, 1.0 - (dist - sceneSDF(p + n * dist).x));
-}
-
-float marchGodRay(vec3 ro, vec3 rd, vec3 light, float hitDist)
+float cast(vec3 ro, vec3 rd, vec3 light, float hitDist)
 {
     // March through the scene, accumulating god rays.
     vec3 p = ro;
@@ -267,25 +236,58 @@ float marchGodRay(vec3 ro, vec3 rd, vec3 light, float hitDist)
         god += godLight(p, light);
         p += st;
     }
-    
+
     god /= 96.0;
 
     return smoothstep(0.0, 1.0, min(god, 1.0));
 }
 
+float ambientOcculsion(vec3 p, vec3 n)
+{
+    const float dist = 0.5;
+    return smoothstep(0.0, 1.0, 1.0 - (dist - sceneSDF(p + n * dist).x));
+}
+
+/**
+ * Using the gradient of the SDF, estimate the normal on the surface at point p.
+ */
+vec3 getNormal(vec3 p)
+{
+    vec2 e = vec2(1.0, -1.0) * 0.0025;
+    return normalize(e.xyy * sceneSDF(p + e.xyy).x +
+					 e.yyx * sceneSDF(p + e.yyx).x +
+					 e.yxy * sceneSDF(p + e.yxy).x +
+					 e.xxx * sceneSDF(p + e.xxx).x);
+}
+
+/**
+ * Return the normalized direction to march in from the eye point for a single pixel.
+ *
+ * ro: eye position
+ * lookAt: lookat position
+ * uv: the x,y coordinate of the pixel in the output image
+ */
+vec3 getRayDir(vec3 ro, vec3 lookAt, vec2 uv)
+{
+    vec3 forward = normalize(lookAt - ro);
+    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
+    vec3 up = cross(forward, right);
+    return normalize(forward + right * uv.x + up * uv.y);
+}
+
 void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 {
     // Camera
-    ray.o = vec3(-0.4, -2.0, -3.);
+    ray.o = vec3(-0.4, -2.0, -6.);
     ray.o.xz = mul(ray.o.xz, rot(0.03 * sin(TIME * 0.6)));
     ray.o.y += sin(TIME * 0.2) * 0.3;
-    ray.d = getRayDir(ray.o, vec3(0.0, -2.0, -1.), uv);
+    ray.d = getRayDir(ray.o, vec3(-1.0, -2.0, -1.), uv);
     
     
     // Ray marching
-    int hit = 0;
-    float d = 0.01; // Ray distance travelled.
-    float maxd = 50.0; // Max ray distance.
+    int hit = 0;  
+    float d = 0.01;      // Ray distance travelled.
+    float maxd = 50.0;   // Max ray distance.
     
     vec3 p;
     float outside = 1.0; // Tracks inside/outside of bubble (for refraction)
@@ -300,7 +302,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
             if (h.y == 4.5)
             {
                 // Bubble refraction.
-                ray.d = refract(ray.d, estimateNormal(p) * sign(outside), 1.0);
+                ray.d = refract(ray.d, getNormal(p) * sign(outside), 1.0);
                 outside *= -1.0;
                 continue;
             }
@@ -315,6 +317,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         d += h.x;
     }
 
+    // Shading
     vec3 deepColor = vec3(0.02, 0.08, 0.2) * 0.1;
     vec3 lightPos = vec3(1.0, 4.0, -1.0);
     vec3 col = deepColor;
@@ -322,7 +325,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     if (hit > 0)
     {
         
-        vec3 n = estimateNormal(p);
+        vec3 n = getNormal(p);
         vec3 mat = vec3(0.15, 0.25, 0.6);
         if (hit == 1)
         {
@@ -341,18 +344,19 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
                 mat += vec3(0.0, 0.2, 0.0); // Plant
             }
 
-            // Caustics
-            mat += smoothstep(0.0, 1.0, (1.0 - caustic(p * 0.5)) * 0.5);
-            mat *= 0.4 + 0.6 * godLight(p, lightPos);
-            mat *= calcOcc(p, n); // Ambient occlusion.
+            // Visual Effects
+            mat += smoothstep(0.0, 1.0, (1.0 - caustic(p * 0.5)) * 0.5); // Caustics
+            mat *= 0.4 + 0.6 * godLight(p, lightPos); // God light
+            mat *= ambientOcculsion(p, n); // Ambient occlusion
                 
-            // Shadows.
+            // Shadows
             vec3 lightDir = normalize(lightPos - p);
             float sha1 = max(0.0, sceneSDF(p + lightDir * 0.25).x / 0.25);
             float sha2 = max(0.0, sceneSDF(p + lightDir).x);
             mat *= clamp((sha1 + sha2) * 0.5, 0.0, 1.0);
         }
         
+        // Lighting
         vec3 lightCol = vec3(1.0, 0.9, 0.8);
         vec3 lightToPoint = normalize(lightPos - p);
         
@@ -363,21 +367,20 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         
     }
     
-    // Fog.
+    // Fog
     float fog = clamp(pow(d / maxd * 2.0, 1.5), 0.0, 1.0);
     col = lerp(col, deepColor, fog);
         
     
-    // God rays.
-    col = lerp(col, vec3(0.15, 0.25, 0.3) * 12.0, marchGodRay(ray.o, ray.d, lightPos, d));
+    // God rays
+    col = lerp(col, vec3(0.15, 0.25, 0.3) * 12.0, cast(ray.o, ray.d, lightPos, d));
     
 
-    // Output to screen
+    // Post processing
     col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction
     // col = vignette(col, fragCoord); // Fade screen corners
     fragColor = vec4(col, 1.0);
     
-    // fragColor = vec4(col, 1.0);
 }
 
 float4 main(PixelShaderInput input) : SV_Target
