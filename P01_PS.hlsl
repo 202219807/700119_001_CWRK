@@ -319,7 +319,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
     // Shading
     vec3 deepColor = vec3(0.02, 0.08, 0.2) * 0.1;
-    vec3 lightPos = vec3(1.0, 4.0, -1.0);
+    vec3 lightPos = vec3(-1.0, 10.0, 1.0);
     vec3 col = deepColor;
     
     if (hit > 0)
