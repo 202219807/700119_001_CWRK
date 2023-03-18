@@ -38,12 +38,6 @@
     <ClCompile Include="Content\FpsTextRenderer.cpp">
       <Filter>Content</Filter>
     </ClCompile>
-    <FxCompile Include="Content\PixelShader00.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
-    <FxCompile Include="Content\VertexShader00.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
@@ -82,25 +76,16 @@
     <AppxManifest Include="Package.appxmanifest" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Content\PixelShader01.hlsl">
+    <FxCompile Include="Content\P01_PS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
-    <FxCompile Include="VertexShader01.hlsl">
+    <FxCompile Include="Content\P01_VS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
-    <FxCompile Include="PixelShader02.hlsl">
+    <FxCompile Include="Content\P02_PS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
-    <FxCompile Include="P01_VS.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
-    <FxCompile Include="P01_PS.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
-    <FxCompile Include="P02_PS.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
-    <FxCompile Include="P02_VS.hlsl">
+    <FxCompile Include="Content\P02_VS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>

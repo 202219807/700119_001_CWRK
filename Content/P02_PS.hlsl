@@ -92,7 +92,7 @@ float map(in vec3 p, out vec4 resColor)
 		float r = length(w);
 		float b = 8.0 * acos(w.y / r);
 		float a = 8.0 * atan2(w.x, w.z);
-		w = p + pow(r, 8.0) * vec3(sin(b) * sin(a), cos(b), sin(b) * cos(a));        
+		w = p + pow(r, 8.0) * vec3(sin(b) * sin(a), cos(b), sin(b) * cos(a));
 
 		trap = min(trap, vec4(abs(w), m));
 
@@ -142,7 +142,7 @@ float raycast(in vec3 ro, in vec3 rd, out vec4 rescol, in float px)
 	vec2 dis = isphere(vec4(0.0, 0.0, 0.0, 1.25), ro, rd);
 	if (dis.y < 0.0) return -1.0;
 	dis.x = max(dis.x, 0.0);
-	dis.y = min(dis.y, 10.0);
+	dis.y = min(dis.y, 15.0);
 
 	// raymarch fractal distance field
 	vec4 trap;
@@ -173,20 +173,20 @@ vec3 refVector(in vec3 v, in vec3 n)
 {
 	// return v;
 	float k = dot(v, n);
-	return (k>0.0) ? v : -v;
+	return (k > 0.0) ? v : -v;
 	// return (k > 0.0) ? v : v - 2.0 * n * k;
 }
 
 vec3 render(Ray ray, in vec2 p, in mat4 cam)
 {
 	// ray setup
-	const float fle = 0.07; // 1.5
+	const float fle = 0.5; // 1.5
 
 	vec2  sp = (2.0 * p - iResolution.xy) / iResolution.y;
 	float px = 2.0 / (iResolution.y * fle);
 
 	vec3  ro = vec3(cam[0].w, cam[1].w, cam[2].w);
-	vec3  rd = normalize((mul(cam,vec4(sp, fle, 0.0))).xyz);
+	vec3  rd = normalize((mul(cam, vec4(sp, fle, 0.0))).xyz);
 
 	// intersect fractal
 	vec4 tra;
@@ -197,13 +197,11 @@ vec3 render(Ray ray, in vec2 p, in mat4 cam)
 	// color sky
 	if (t < 0.0)
 	{
-		// col = vec3(0.0, 0.0, 0.0);
-		return col;
-		
-		col = vec3(0.8, .9, 2.1) * (0.6 + 0.4 * rd.y);
-		col += 5.0 * vec3(0.8, 0.7, 0.5) * pow(clamp(dot(rd, light1), 0.0, 1.0), 32.0);
+		col = vec3(0.0, 0.0, 0.0);
+		// col = vec3(0.8, .9, 2.1) * (0.6 + 0.4 * rd.y);
+		// col += 5.0 * vec3(0.8, 0.7, 0.5) * pow(clamp(dot(rd, light1), 0.0, 1.0), 32.0);
 	}
-	
+
 	// color fractal
 	else
 	{
@@ -273,6 +271,7 @@ void mainImage(Ray ray, out vec4 fragColor, in vec2 fragCoord)
 
 	// render
 	vec3 col = vec3(0.0, 0.0, 0.0);
+	
 	for (int j = ZERO; j < AA; j++)
 		for (int i = ZERO; i < AA; i++)
 		{
@@ -300,5 +299,29 @@ float4 main(PixelShaderInput input) : SV_Target
 	float4 fragColor;
 
 	mainImage(ray, fragColor, input.pos.xy);
+
+	if (fragColor.r == 0.0 && fragColor.g == 0.0 && fragColor.b == 0.0) {
+		discard;
+	}
 	return fragColor;
 }
+
+
+
+
+//struct PixelShaderInput
+//{
+//    float4 pos : SV_POSITION;
+//    float3 color : COLOR0;
+//};
+//
+//float4 main(PixelShaderInput input) : SV_Target{
+//
+//    float3 color = input.color;
+//    if (color.r == 0.0 && color.g == 0.0 && color.b == 0.0)
+//    {
+//        discard;
+//    }
+//    float4 fragColor = float4(color, 1.0);
+//    return fragColor;
+//}

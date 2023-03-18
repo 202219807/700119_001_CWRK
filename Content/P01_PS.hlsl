@@ -5,6 +5,10 @@
 #define mat2 float2x2 
 #define mat3 float3x3 
 
+#define mod  fmod
+#define mix  lerp
+#define atan atan2
+
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
     matrix model;
@@ -182,6 +186,44 @@ float plantsSDF(vec3 p)
     return d;
 }
 
+float coralSDF(vec3 r) {
+    vec3 zn = vec3(r.xyz);
+    float rad = 0.0;
+    float hit = 0.0;
+    float p = 15.0;
+    float d = 1.0;
+    for (int i = 0; i < 10; i++)
+    {
+
+        rad = length(zn);
+
+        if (rad > 2.0)
+        {
+            hit = 0.5 * log(rad) * rad / d;
+        }
+        else {
+
+            float th = atan(length(zn.xy), zn.z);
+            float phi = atan(zn.y, zn.x);
+            float rado = pow(rad, 8.0);
+            d = pow(rad, 7.0) * 7.0 * d + 1.0;
+
+
+
+            float sint = sin(th * p);
+            zn.x = rado * sint * cos(phi * p);
+            zn.y = rado * sint * sin(phi * p);
+            zn.z = rado * cos(th * p);
+            zn += r;
+        }
+
+    }
+
+    return hit;
+
+
+}
+
 /**
  * Signed distance function describing the scene.
  * 
@@ -198,11 +240,14 @@ float2 sceneSDF(vec3 p)
     float t = TIME * 0.6;
     surface += (0.5 + 0.5 * (sin(p.z * 0.2 + t) + sin((p.z + p.x) * 0.1 + t * 2.0))) * 0.4;
     
-    return min2(vec2(surface, 1.0),
-           min2(vec2(floorSDF(p), 2.5),
+    return min2(vec2(surface, 1.5),
+           min2(vec2(floorSDF(p), 3.5),
            min2(vec2(plantsSDF(p - vec3(0.0, 0.0, 0.0)), 5.5),
+           min2(vec2(coralSDF(p - vec3(-3.0, -3.0, 0.0)), 6.5),
+           min2(vec2(plantsSDF(p - vec3(-2.5, 0.0, -1.3)), 8.5),
+           min2(vec2(coralSDF(p - vec3(-3.0, -2.4, -2.8)), 7.5),
            min2(vec2(bubbleSDF(pp, TIME - 0.8), 4.5),
-                vec2(bubbleSDF(pp, TIME), 2.5)))));
+                vec2(bubbleSDF(pp, TIME), 2.5))))))));
 }
 
 /**
@@ -341,13 +386,25 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
             }
             else if (hit == 5)
             {
-                mat += vec3(0.0, 0.2, 0.0); // Plant
+                mat += vec3(0.0, 0.2, 0.0);         // Plant
+            }
+            else if (hit == 6)
+            {
+                mat += vec3(1.32, 0.35, .15);       // Coral
+            }
+            else if (hit == 7)
+            {
+                mat += vec3(1.12, 0.25, .15) * 0.5; // Coral
+            }
+            else if (hit == 8)
+            {
+                mat += vec3(0.0, 0.2, 0.0);         // Plant
             }
 
             // Visual Effects
             mat += smoothstep(0.0, 1.0, (1.0 - caustic(p * 0.5)) * 0.5); // Caustics
-            mat *= 0.4 + 0.6 * godLight(p, lightPos); // God light
-            mat *= ambientOcculsion(p, n); // Ambient occlusion
+            mat *= 0.4 + 0.6 * godLight(p, lightPos);                    // God light
+            mat *= ambientOcculsion(p, n);                               // Ambient occlusion
                 
             // Shadows
             vec3 lightDir = normalize(lightPos - p);
@@ -377,9 +434,8 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     
 
     // Post processing
-    col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction
-    // col = vignette(col, fragCoord); // Fade screen corners 
-    // col *= 1.0 - 0.05 * length(uv);
+    col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction 
+    col *= 1.0 - 0.05 * length(uv); // Vignette
     fragColor = vec4(col, 1.0);
     
 }

@@ -16,6 +16,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render(DX::StepTimer const& timer);
+		
 		void StartTracking();
 		void TrackingUpdate(float positionX);
 		void StopTracking();
@@ -27,25 +28,26 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 	private:
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources>		m_deviceResources;
-
-		// Direct3D resources for cube geometry.
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader01;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader01;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader02;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader02;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+		std::shared_ptr<DX::DeviceResources>		    m_deviceResources;
+													    
+		// Direct3D resources for cube geometry.	    
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader01;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader01;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader02;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader02;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_RasterizerState;
 
 		// System resources for cube geometry.
-		ModelViewProjectionConstantBuffer			m_constantBufferData;
-		uint32										m_indexCount;
+		ModelViewProjectionConstantBuffer				m_constantBufferData;
+		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.
-		bool										m_loadingComplete;
-		float										m_degreesPerSecond;
-		bool										m_tracking;
+		bool											m_loadingComplete;
+		float											m_degreesPerSecond;
+		bool											m_tracking;
 	};
 }
