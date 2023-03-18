@@ -33,8 +33,10 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader01;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader01;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader02;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader02;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
 
 		// System resources for cube geometry.

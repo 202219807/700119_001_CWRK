@@ -78,8 +78,7 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
 		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
 
-		// Rotate(radians);
-		Rotate(0.0);
+		Rotate(0.0); // radians;
 	}
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
@@ -92,8 +91,6 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 	UINT numViewports = 1;
 	context->RSGetViewports(&numViewports, &viewport);
 
-	//int viewportWidth = (int)viewport.Width;
-	//int viewportHeight = (int)viewport.Height;
 	int viewportWidth = m_deviceResources->GetOutputSize().Width;
 	int viewportHeight = m_deviceResources->GetOutputSize().Height;
 	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
@@ -173,7 +170,7 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 
 	// Attach our vertex shader.
 	context->VSSetShader(
-		m_vertexShader.Get(),
+		m_vertexShader01.Get(),
 		nullptr,
 		0
 	);
@@ -189,7 +186,7 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 
 	// Attach our pixel shader.
 	context->PSSetShader(
-		m_pixelShader.Get(),
+		m_pixelShader01.Get(),
 		nullptr,
 		0
 	);
@@ -203,7 +200,46 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 		nullptr
 	);
 
-	// Draw the objects.
+	// Draw the objects 1.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader02.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader02.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Draw the objects 2.
 	context->DrawIndexed(
 		m_indexCount,
 		0,
@@ -213,61 +249,68 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 
 void SceneRenderer::CreateDeviceDependentResources()
 {
+	// Graphic Pipeline 01:
+	// 
+	// Implicit modeling with signed distance based ray marching
+	// Ocean surface and underwater effects.
+	// Reflective/Refractive Bubbles.
+	// Underwater plantations
+
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"P01_VS.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"P01_PS.cso");
+	auto loadPipeline01_VSTask = DX::ReadDataAsync(L"P01_VS.cso");
+	auto loadPipeline01_PSTask = DX::ReadDataAsync(L"P01_PS.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
-	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
+	auto createPipeline01_VSTask = loadPipeline01_VSTask.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateVertexShader(
 				&fileData[0],
 				fileData.size(),
 				nullptr,
-				&m_vertexShader
+				&m_vertexShader01
 			)
 		);
 
-	static const D3D11_INPUT_ELEMENT_DESC vertexDesc [] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
 
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateInputLayout(
-			vertexDesc,
-			ARRAYSIZE(vertexDesc),
-			&fileData[0],
-			fileData.size(),
-			&m_inputLayout
-		)
-	);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateInputLayout(
+				vertexDesc,
+				ARRAYSIZE(vertexDesc),
+				&fileData[0],
+				fileData.size(),
+				&m_inputLayout
+			)
+		);
 		});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
-	auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData) {
+	auto createPipeline01_PSTask = loadPipeline01_PSTask.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreatePixelShader(
 				&fileData[0],
 				fileData.size(),
 				nullptr,
-				&m_pixelShader
+				&m_pixelShader01
 			)
 		);
 
-	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&constantBufferDesc,
-			nullptr,
-			&m_constantBuffer
-		)
-	);
+		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&constantBufferDesc,
+				nullptr,
+				&m_constantBuffer
+			)
+		);
 		});
 
 	// Once both shaders are loaded, create the mesh.
-	auto createCubeTask = (createPSTask && createVSTask).then([this] () {
+	auto execPipeline01 = (createPipeline01_PSTask && createPipeline01_VSTask).then([this]() {
 
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor cubeVertices[] =
@@ -282,73 +325,208 @@ void SceneRenderer::CreateDeviceDependentResources()
 			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
 		};
 
-	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-	vertexBufferData.pSysMem = cubeVertices;
-	vertexBufferData.SysMemPitch = 0;
-	vertexBufferData.SysMemSlicePitch = 0;
-	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&vertexBufferDesc,
-			&vertexBufferData,
-			&m_vertexBuffer
-		)
-	);
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = cubeVertices;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc,
+				&vertexBufferData,
+				&m_vertexBuffer
+			)
+		);
 
-	// Load mesh indices. Each trio of indices represents
-	// a triangle to be rendered on the screen.
-	// For example: 0,2,1 means that the vertices with indexes
-	// 0, 2 and 1 from the vertex buffer compose the 
-	// first triangle of this mesh.
-	static const unsigned short cubeIndices [] =
-	{
-		0,2,1, // -x
-		1,2,3,
+		// Load mesh indices. Each trio of indices represents
+		// a triangle to be rendered on the screen.
+		// For example: 0,2,1 means that the vertices with indexes
+		// 0, 2 and 1 from the vertex buffer compose the 
+		// first triangle of this mesh.
+		static const unsigned short cubeIndices[] =
+		{
+			0,2,1, // -x
+			1,2,3,
 
-		4,5,6, // +x
-		5,7,6,
+			4,5,6, // +x
+			5,7,6,
 
-		0,1,5, // -y
-		0,5,4,
+			0,1,5, // -y
+			0,5,4,
 
-		2,6,7, // +y
-		2,7,3,
+			2,6,7, // +y
+			2,7,3,
 
-		0,4,6, // -z
-		0,6,2,
+			0,4,6, // -z
+			0,6,2,
 
-		1,3,7, // +z
-		1,7,5,
-	};
+			1,3,7, // +z
+			1,7,5,
+		};
 
-	m_indexCount = ARRAYSIZE(cubeIndices);
+		m_indexCount = ARRAYSIZE(cubeIndices);
 
-	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-	indexBufferData.pSysMem = cubeIndices;
-	indexBufferData.SysMemPitch = 0;
-	indexBufferData.SysMemSlicePitch = 0;
-	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&indexBufferDesc,
-			&indexBufferData,
-			&m_indexBuffer
-		)
-	);
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = cubeIndices;
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc,
+				&indexBufferData,
+				&m_indexBuffer
+			)
+		);
 		});
 
 	// Once the cube is loaded, the object is ready to be rendered.
-	createCubeTask.then([this] () {
+	execPipeline01.then([this]() {
 		m_loadingComplete = true;
 		});
+
+	// Graphic Pipeline 02:
+	// 
+	// Ray casting
+	// Underwater coral object (Mandelbulb derivate)
+
+	// Load shaders asynchronously.
+	auto loadPipeline02_VSTask = DX::ReadDataAsync(L"P02_VS.cso");
+	auto loadPipeline02_PSTask = DX::ReadDataAsync(L"P02_PS.cso");
+
+	// After the vertex shader file is loaded, create the shader and input layout.
+	auto createPipeline02_VSTask = loadPipeline02_VSTask.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateVertexShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_vertexShader02
+			)
+		);
+
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateInputLayout(
+				vertexDesc,
+				ARRAYSIZE(vertexDesc),
+				&fileData[0],
+				fileData.size(),
+				&m_inputLayout
+			)
+		);
+		});
+
+	// After the pixel shader file is loaded, create the shader and constant buffer.
+	auto createPipeline02_PSTask = loadPipeline02_PSTask.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreatePixelShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_pixelShader02
+			)
+		);
+
+		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&constantBufferDesc,
+				nullptr,
+				&m_constantBuffer
+			)
+		);
+		});
+
+	// Once both shaders are loaded, create the mesh.
+	auto execPipeline02 = (createPipeline02_PSTask && createPipeline02_VSTask).then([this]() {
+
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor cubeVertices[] =
+		{
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+		};
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = cubeVertices;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc,
+				&vertexBufferData,
+				&m_vertexBuffer
+			)
+		);
+
+		// Load mesh indices. Each trio of indices represents
+		// a triangle to be rendered on the screen.
+		// For example: 0,2,1 means that the vertices with indexes
+		// 0, 2 and 1 from the vertex buffer compose the 
+		// first triangle of this mesh.
+		static const unsigned short cubeIndices[] =
+		{
+			0,2,1, // -x
+			1,2,3,
+
+			4,5,6, // +x
+			5,7,6,
+
+			0,1,5, // -y
+			0,5,4,
+
+			2,6,7, // +y
+			2,7,3,
+
+			0,4,6, // -z
+			0,6,2,
+
+			1,3,7, // +z
+			1,7,5,
+		};
+
+		m_indexCount = ARRAYSIZE(cubeIndices);
+
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = cubeIndices;
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc,
+				&indexBufferData,
+				&m_indexBuffer
+			)
+		);
+		});
+
+	// Once the cube is loaded, the object is ready to be rendered.
+	execPipeline02.then([this]() {
+		m_loadingComplete = true;
+		});
+
 }
 
 void SceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
-	m_vertexShader.Reset();
+	m_vertexShader01.Reset();
 	m_inputLayout.Reset();
-	m_pixelShader.Reset();
+	m_pixelShader01.Reset();
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();

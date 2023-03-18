@@ -97,5 +97,11 @@
     <FxCompile Include="P01_PS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
+    <FxCompile Include="P02_PS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="P02_VS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

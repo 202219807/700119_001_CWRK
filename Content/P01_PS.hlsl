@@ -378,7 +378,8 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
     // Post processing
     col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction
-    // col = vignette(col, fragCoord); // Fade screen corners
+    // col = vignette(col, fragCoord); // Fade screen corners 
+    // col *= 1.0 - 0.05 * length(uv);
     fragColor = vec4(col, 1.0);
     
 }

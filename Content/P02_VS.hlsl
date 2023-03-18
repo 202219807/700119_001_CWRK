@@ -25,7 +25,7 @@ PixelShaderInput main(VertexShaderInput input)
 
     float4 inPos = float4(input.pos, 1.0);
 
-    output.pos = mul(float4(20 * inPos.xy, inPos.zw), model);
+    output.pos = mul(float4(20 * inPos.xy + 3.0, inPos.zw), model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
 
