@@ -88,5 +88,8 @@
     <FxCompile Include="Content\P02_VS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
+    <FxCompile Include="Content\P02_GS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

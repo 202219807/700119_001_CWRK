@@ -7,6 +7,8 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     float4 resolution;
 };
 
+static float time = timer.x;
+
 struct VertexShaderInput
 {
     float3 pos : POSITION;
@@ -16,62 +18,56 @@ struct VertexShaderInput
 struct PixelShaderInput
 {
     float4 pos : SV_POSITION;
-    float2 canvasXY : TEXCOORD0;
+    float3 color : COLOR0;
 };
+
+float3 GradientShade(float3 position)
+{
+    // Define the start and end colors of the gradient
+    float3 startColor = float3(0.0, 1.0, 1.0); // Blue
+    float3 endColor = float3(1.0, 0.0, 0.0);   // Yellow
+
+    // Calculate the position's distance from the origin
+    float distance = length(position);
+
+    // Normalize the position vector to get a value between 0 and 1
+    float t = saturate(dot(normalize(position), normalize(float3(-1.0, 1.0, 0.0))));
+
+    // Add variation to the colors
+    float3 colorVariationVector = sin(position * 0.6);
+    startColor += colorVariationVector;
+    endColor += colorVariationVector;
+
+    // Interpolate between the start and end colors based on the distance
+    return lerp(startColor, endColor, t);
+}
 
 PixelShaderInput main(VertexShaderInput input)
 {
     PixelShaderInput output;
 
-    float4 inPos = float4(input.pos, 1.0);
+    float3 inPos = float4(input.pos, 1.0);
+    inPos.xyz *= float4(1.0, 2.0, 1.0, 1.0);
+    inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
+    
+    // Create the rotation matrix
+    float c = cos(time * 0.1);
+    float s = sin(time * 0.1);
+    float4x4 rotationMatrix = float4x4(
+        c, 0, -s, 0,
+        0, 1, 0, 0,
+        s, 0, c, 0,
+        0, 0, 0, 1
+    );
 
-    output.pos = mul(float4(20 * inPos.xy + 5.0, inPos.zw), model);
+    inPos = mul(inPos, rotationMatrix);
+   
+    output.pos = mul(inPos, model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
 
-    float aspectRatio = projection._m11 / projection._m00;
-    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.8);
+
+    output.color = GradientShade(output.pos);
 
     return output;
 }
-
-//cbuffer ModelViewProjectionConstantBuffer : register(b0)
-//{
-//    matrix model;
-//    matrix view;
-//    matrix projection;
-//};
-//
-//struct VertexShaderInput
-//{
-//    float3 pos : POSITION;
-//    float3 color : COLOR0;
-//};
-//
-//struct PixelShaderInput
-//{
-//    float4 pos : SV_POSITION;
-//    float3 color : COLOR0;
-//};
-//
-//
-//PixelShaderInput main(VertexShaderInput input)
-//{
-//    PixelShaderInput output;
-//    float3 inPos = input.pos;
-//
-//    //float r = 1.0f;
-//    //inPos.x = r * sin(input.pos.y) * cos(input.pos.x);
-//    //inPos.y = r * sin(input.pos.y) * sin(input.pos.x);
-//    //inPos.z = r * cos(input.pos.y);
-//    float4 pos = float4(inPos, 1.0f);
-//
-//    pos = mul(pos, model);
-//    pos = mul(pos, view);
-//    pos = mul(pos, projection);
-//    output.pos = pos;
-//
-//    output.color = input.color;
-//
-//    return output;
-//}

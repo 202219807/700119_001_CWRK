@@ -37,6 +37,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader01;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader01;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader02;
+		Microsoft::WRL::ComPtr<ID3D11GeometryShader>    m_geometryShader02;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader02;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_RasterizerState;
