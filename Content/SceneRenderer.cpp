@@ -57,10 +57,12 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
 	);
 
-	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
+	// Default: Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
+	
+	static const XMVECTORF32 eye = { 0.0f, -0.1f, 2.5f, 0.0f }; // dont delete
 	// static const XMVECTORF32 eye = { 0.0f, 3.0f, 1.0f, 0.0f };
-	static const XMVECTORF32 eye = { 0.0f, -0.1f, 5.5f, 0.0f };
 	// static const XMVECTORF32 eye = { 0.0f, -0.1f, 3.5f, 0.0f };
+	
 	// static const XMVECTORF32 at = { 0.0f, 0.7f, 0.0f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -137,13 +139,13 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	//D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 
-	//rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	//m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
-	//	m_RasterizerState.GetAddressOf());
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
+		m_RasterizerState.GetAddressOf());
 
-	//context->RSSetState(m_RasterizerState.Get());
+	context->RSSetState(m_RasterizerState.Get());
 	
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
@@ -279,64 +281,64 @@ void SceneRenderer::Render(DX::StepTimer const& timer)
 	//	0
 	//);
 
-	//rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	//m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
-	//	m_RasterizerState.GetAddressOf());
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
+		m_RasterizerState.GetAddressOf());
 
-	//context->RSSetState(m_RasterizerState.Get());
+	context->RSSetState(m_RasterizerState.Get());
 
-	//context->UpdateSubresource1(
-	//		m_constantBuffer.Get(),
-	//		0,
-	//		NULL,
-	//		&m_constantBufferData,
-	//		0,
-	//		0,
-	//		0
-	//	);
+	context->UpdateSubresource1(
+			m_constantBuffer.Get(),
+			0,
+			NULL,
+			&m_constantBufferData,
+			0,
+			0,
+			0
+		);
 
-	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	//context->IASetInputLayout(m_inputLayout.Get());
-	// 
-	//// Attach our vertex shader.
-	//context->VSSetShader(
-	//	m_vertexShader03.Get(),
-	//	nullptr,
-	//	0
-	//);
+	context->IASetInputLayout(m_inputLayout.Get());
+	 
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader03.Get(),
+		nullptr,
+		0
+	);
 
-	//// Send the constant buffer to the graphics device.
-	//context->VSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 
-	//// Attach our pixel shader.
-	//context->PSSetShader(
-	//	m_pixelShader03.Get(),
-	//	nullptr,
-	//	0
-	//);
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader03.Get(),
+		nullptr,
+		0
+	);
 
-	//// Send the constant buffer to the graphics device.
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
+	// Send the constant buffer to the graphics device.
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 
-	//// Draw the object 3.
-	//context->DrawIndexed(
-	//	m_indexCount,
-	//	0,
-	//	0
-	//);
+	// Draw the object 3.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
 
 }
 
@@ -652,146 +654,146 @@ void SceneRenderer::CreateDeviceDependentResources()
 	// 
 	// Underwater coral object generated procedurally using a vertex shader..
 
-	//// Load shaders asynchronously.
-	//auto loadPipeline03_VSTask = DX::ReadDataAsync(L"P03_VS.cso");
-	//auto loadPipeline03_PSTask = DX::ReadDataAsync(L"P03_PS.cso");
+	// Load shaders asynchronously.
+	auto loadPipeline03_VSTask = DX::ReadDataAsync(L"P03_VS.cso");
+	auto loadPipeline03_PSTask = DX::ReadDataAsync(L"P03_PS.cso");
 
-	//// After the vertex shader file is loaded, create the shader and input layout.
-	//auto createPipeline03_VSTask = loadPipeline03_VSTask.then([this](const std::vector<byte>& fileData) {
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateVertexShader(
-	//			&fileData[0],
-	//			fileData.size(),
-	//			nullptr,
-	//			&m_vertexShader03
-	//		)
-	//	);
+	// After the vertex shader file is loaded, create the shader and input layout.
+	auto createPipeline03_VSTask = loadPipeline03_VSTask.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateVertexShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_vertexShader03
+			)
+		);
 
-	//	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	//	{
-	//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	};
-
-
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateInputLayout(
-	//			vertexDesc,
-	//			ARRAYSIZE(vertexDesc),
-	//			&fileData[0],
-	//			fileData.size(),
-	//			&m_inputLayout
-	//		)
-	//	);
-	//	});
-
-	//// After the pixel shader file is loaded, create the shader and constant buffer.
-	//auto createPipeline03_PSTask = loadPipeline03_PSTask.then([this](const std::vector<byte>& fileData) {
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreatePixelShader(
-	//			&fileData[0],
-	//			fileData.size(),
-	//			nullptr,
-	//			&m_pixelShader03
-	//		)
-	//	);
-
-	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&constantBufferDesc,
-	//			nullptr,
-	//			&m_constantBuffer
-	//		)
-	//	);
-	//	});
-
-	//// Once both shaders are loaded, create the mesh.
-	//auto execPipeline03 = (createPipeline03_PSTask && createPipeline03_VSTask).then([this]() {
-
-	//	const UINT numSamples = 100;
-
-	//	// Load mesh vertices. Each vertex has a position and a color.
-	//	const UINT vSize = (numSamples - 1) * (numSamples - 1);
-	//	const UINT iSize = numSamples * numSamples * 2;
-
-	//	static VertexPositionColor quadVertices[vSize];
-	//	static unsigned short quadIndices[iSize];
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
 
 
-	//	float xStep = XM_2PI / (numSamples - 1);
-	//	float yStep = XM_PI / (numSamples - 1);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateInputLayout(
+				vertexDesc,
+				ARRAYSIZE(vertexDesc),
+				&fileData[0],
+				fileData.size(),
+				&m_inputLayout
+			)
+		);
+		});
 
-	//	UINT vertexFlag = 0;
-	//	UINT indexFlag = 0;
-	//	for (UINT i = 0; i < numSamples - 1; i++)
-	//	{
-	//		float y = i * yStep;
-	//		for (UINT j = 0; j < numSamples - 1; j++)
-	//		{
-	//			if (indexFlag > iSize)
-	//				break;
-	//			float x = j * xStep;
-	//			VertexPositionColor v;
-	//			v.pos.x = x;
-	//			v.pos.y = y;
-	//			v.pos.z = 0;
-	//			v.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	//			quadVertices[vertexFlag] = v;
+	// After the pixel shader file is loaded, create the shader and constant buffer.
+	auto createPipeline03_PSTask = loadPipeline03_PSTask.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreatePixelShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_pixelShader03
+			)
+		);
 
-	//			vertexFlag = vertexFlag + 1;
+		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&constantBufferDesc,
+				nullptr,
+				&m_constantBuffer
+			)
+		);
+		});
 
-	//			unsigned short index0 = i * numSamples + j;
-	//			unsigned short index1 = index0 + 1;
-	//			unsigned short index2 = index0 + numSamples;
-	//			unsigned short index3 = index2 + 1;
-	//			quadIndices[indexFlag] = index0;
-	//			quadIndices[indexFlag + 1] = index2;
-	//			quadIndices[indexFlag + 2] = index1;
+	// Once both shaders are loaded, create the mesh.
+	auto execPipeline03 = (createPipeline03_PSTask && createPipeline03_VSTask).then([this]() {
 
-	//			quadIndices[indexFlag + 3] = index1;
-	//			quadIndices[indexFlag + 4] = index2;
-	//			quadIndices[indexFlag + 5] = index3;
+		const UINT numSamples = 100;
 
-	//			indexFlag = indexFlag + 6;
-	//		}
-	//	}
+		// Load mesh vertices. Each vertex has a position and a color.
+		const UINT vSize = (numSamples - 1) * (numSamples - 1);
+		const UINT iSize = numSamples * numSamples * 2;
+
+		static VertexPositionColor quadVertices[vSize];
+		static unsigned short quadIndices[iSize];
 
 
-	//	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-	//	vertexBufferData.pSysMem = quadVertices;
-	//	vertexBufferData.SysMemPitch = 0;
-	//	vertexBufferData.SysMemSlicePitch = 0;
-	//	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&vertexBufferDesc,
-	//			&vertexBufferData,
-	//			&m_vertexBuffer
-	//		)
-	//	);
+		float xStep = XM_2PI / (numSamples - 1);
+		float yStep = XM_PI / (numSamples - 1);
 
-	//	m_indexCount = ARRAYSIZE(quadIndices);
+		UINT vertexFlag = 0;
+		UINT indexFlag = 0;
+		for (UINT i = 0; i < numSamples - 1; i++)
+		{
+			float y = i * yStep;
+			for (UINT j = 0; j < numSamples - 1; j++)
+			{
+				if (indexFlag > iSize)
+					break;
+				float x = j * xStep;
+				VertexPositionColor v;
+				v.pos.x = x;
+				v.pos.y = y;
+				v.pos.z = 0;
+				v.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
+				quadVertices[vertexFlag] = v;
 
-	//	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-	//	indexBufferData.pSysMem = quadIndices;
-	//	indexBufferData.SysMemPitch = 0;
-	//	indexBufferData.SysMemSlicePitch = 0;
-	//	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&indexBufferDesc,
-	//			&indexBufferData,
-	//			&m_indexBuffer
-	//		)
-	//	);
+				vertexFlag = vertexFlag + 1;
 
-	//	});
+				unsigned short index0 = i * numSamples + j;
+				unsigned short index1 = index0 + 1;
+				unsigned short index2 = index0 + numSamples;
+				unsigned short index3 = index2 + 1;
+				quadIndices[indexFlag] = index0;
+				quadIndices[indexFlag + 1] = index2;
+				quadIndices[indexFlag + 2] = index1;
 
-	//// Once the cube is loaded, the object is ready to be rendered.
-	//execPipeline03.then([this]() {
-	//	m_loadingComplete = true;
-	//	});
+				quadIndices[indexFlag + 3] = index1;
+				quadIndices[indexFlag + 4] = index2;
+				quadIndices[indexFlag + 5] = index3;
+
+				indexFlag = indexFlag + 6;
+			}
+		}
+
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = quadVertices;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc,
+				&vertexBufferData,
+				&m_vertexBuffer
+			)
+		);
+
+		m_indexCount = ARRAYSIZE(quadIndices);
+
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = quadIndices;
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc,
+				&indexBufferData,
+				&m_indexBuffer
+			)
+		);
+
+		});
+
+	// Once the cube is loaded, the object is ready to be rendered.
+	execPipeline03.then([this]() {
+		m_loadingComplete = true;
+		});
 
 }
 

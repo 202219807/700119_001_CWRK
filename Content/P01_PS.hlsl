@@ -381,23 +381,28 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         {
             if (hit == 3)
             {
-                mat += vec3(0.1, 0.1, 0.0); // Sand
+                // Sand
+                mat += vec3(0.1, 0.1, 0.0); 
             }
             else if (hit == 5)
             {
-                mat += vec3(0.0, 0.2, 0.0);         // Plant
+                // Plant
+                mat += vec3(0.0, 0.2, 0.0);            
             }
             else if (hit == 6)
             {
-                mat += vec3(0.255, 0.191, 0.0);       // Coral            
+                // Coral     vec3(0.255, 0.191, 0.0);        
+                mat += vec3(1.32, 0.35, .15);       
             }
             else if (hit == 7)
             {
-                mat += vec3(0.255, 0.191, 0.0) * 0.8;  // Coral
+                // Coral     vec3(0.255, 0.191, 0.0);
+                mat += vec3(1.12, 0.25, .15) * 0.5; 
             }
             else if (hit == 8)
             {
-                mat += vec3(0.0, 0.2, 0.0);            // Plant
+                // Plant
+                mat += vec3(0.0, 0.2, 0.0);           
             }
 
             // Visual Effects
