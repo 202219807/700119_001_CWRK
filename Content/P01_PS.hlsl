@@ -190,9 +190,9 @@ float coralSDF(vec3 r) {
     vec3 zn = vec3(r.xyz);
     float rad = 0.0;
     float hit = 0.0;
-    float p = 15.0;
-    float d = 1.0;
-    for (int i = 0; i < 10; i++)
+    float p = 10; //12
+    float d = 2.0;
+    for (int i = 0; i < 4; i++)
     {
 
         rad = length(zn);
@@ -207,7 +207,6 @@ float coralSDF(vec3 r) {
             float phi = atan(zn.y, zn.x);
             float rado = pow(rad, 8.0);
             d = pow(rad, 7.0) * 7.0 * d + 1.0;
-
 
 
             float sint = sin(th * p);
@@ -390,15 +389,15 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
             }
             else if (hit == 6)
             {
-                mat += vec3(1.32, 0.35, .15);       // Coral
+                mat += vec3(0.255, 0.191, 0.0);       // Coral            
             }
             else if (hit == 7)
             {
-                mat += vec3(1.12, 0.25, .15) * 0.5; // Coral
+                mat += vec3(0.255, 0.191, 0.0) * 0.8;  // Coral
             }
             else if (hit == 8)
             {
-                mat += vec3(0.0, 0.2, 0.0);         // Plant
+                mat += vec3(0.0, 0.2, 0.0);            // Plant
             }
 
             // Visual Effects
@@ -435,7 +434,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
     // Post processing
     col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction 
-    col *= 1.0 - 0.05 * length(uv); // Vignette
+    //col *= 1.0 - 0.5 * length(uv); // Vignette
     fragColor = vec4(col, 1.0);
     
 }
