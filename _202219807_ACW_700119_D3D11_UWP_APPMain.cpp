@@ -78,7 +78,7 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
-	m_sceneRenderer->Render(m_timer);
+	m_sceneRenderer->Render();
 	m_fpsTextRenderer->Render();
 
 	return true;

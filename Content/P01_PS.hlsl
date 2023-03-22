@@ -16,6 +16,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
     float4 timer;
     float4 resolution;
+    float4 eye;
 };
 
 /**
@@ -24,12 +25,11 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
  * your applicationand pass them to pixel shaders as 
  * shader constants by means of constant buffer. 
  */
-static float4       EYE                = float4(0, 0, 15, 1);
-static const int    MAX_MARCHING_STEPS = 100;
-static const float  MIN_DIST           = 0.01;
+static const int    MAX_MARCHING_STEPS = 255;
+static const float  MIN_DIST           = 0.0;
 static const float  MAX_DIST           = 100.0;
 static const float  EPSILON            = 0.0001;
-static const float  TIME               = timer.x + 37.0;
+static const float  TIME               = timer.x;
 
 struct PixelShaderInput
 {
@@ -57,7 +57,7 @@ float hash(float n)
     return frac(sin(n) * 43758.5453);
 }
 
-float noise(in vec3 x)
+float noise(in float3 x)
 {
     vec3 p = floor(x);
     vec3 k = frac(x);
@@ -81,7 +81,7 @@ float noise(in vec3 x)
 }
 
 /* Rotation */ 
-mat2 rot(float a)
+float2x2 rot(float a)
 {
     float c = cos(a);
     float s = sin(a);
@@ -89,7 +89,7 @@ mat2 rot(float a)
 }
 
 /* Minimum */
-vec2 min2(vec2 a, vec2 b)
+float2 min2(float2 a, float2 b)
 {
     return a.x < b.x ? a : b;
 }
@@ -103,6 +103,9 @@ float smin(float a, float b, float k)
 
 /**
  * Signed distance functions for implicit modeling;
+ * 
+ * surface, floor, bubble and plant modeling based on https://www.shadertoy.com/view/WtfyWj
+ * coral object modeling based on https://www.shadertoy.com/view/XsfGR8
  */
 float surfaceSDF(vec2 p)
 {   
@@ -144,12 +147,6 @@ float floorSDF(vec3 p)
     return distToFloor;
 }
 
-float rodSDF(vec3 p, float h, float r)
-{
-    p.y -= clamp(p.y, 0.0, h);
-    return length(p) - r;
-}
-
 float bubbleSDF(vec3 p, float t)
 {
     float progress = pow(min(frac(t * 0.1) * 4.5, 1.0), 2.0);
@@ -160,6 +157,12 @@ float bubbleSDF(vec3 p, float t)
     float d = 2.0 - smoothstep(0.0, 1.0, min(progress * 5.0, 1.0)) * 0.3;
     
     return length(p + vec3(d, depth, -1.0 + 0.2 * progress * sin(progress * 10.0))) - r;
+}
+
+float rodSDF(vec3 p, float h, float r)
+{
+    p.y -= clamp(p.y, 0.0, h);
+    return length(p) - r;
 }
 
 float plantSDF(vec3 p, float h)
@@ -219,8 +222,6 @@ float coralSDF(vec3 r) {
     }
 
     return hit;
-
-
 }
 
 /**
@@ -251,7 +252,10 @@ float2 sceneSDF(vec3 p)
 
 /**
  * Adv. effects:
- * Caustics, God Rays and Ambient Occulsion
+ * Caustics, God Rays and Ambient Occlusion
+ * 
+ * caustics based on https://www.shadertoy.com/view/WdByRR 
+ * god rays and ambient occlusion based on https://www.shadertoy.com/view/WtfyWj
  */
 float caustic(vec3 p)
 {
@@ -286,16 +290,13 @@ float cast(vec3 ro, vec3 rd, vec3 light, float hitDist)
     return smoothstep(0.0, 1.0, min(god, 1.0));
 }
 
-float ambientOcculsion(vec3 p, vec3 n)
+float ambientOcclusion(vec3 p, vec3 n)
 {
     const float dist = 0.5;
     return smoothstep(0.0, 1.0, 1.0 - (dist - sceneSDF(p + n * dist).x));
 }
 
-/**
- * Using the gradient of the SDF, estimate the normal on the surface at point p.
- */
-vec3 getNormal(vec3 p)
+float3 getNormal(vec3 p)
 {
     vec2 e = vec2(1.0, -1.0) * 0.0025;
     return normalize(e.xyy * sceneSDF(p + e.xyy).x +
@@ -304,44 +305,22 @@ vec3 getNormal(vec3 p)
 					 e.xxx * sceneSDF(p + e.xxx).x);
 }
 
-/**
- * Return the normalized direction to march in from the eye point for a single pixel.
- *
- * ro: eye position
- * lookAt: lookat position
- * uv: the x,y coordinate of the pixel in the output image
- */
-vec3 getRayDir(vec3 ro, vec3 lookAt, vec2 uv)
-{
-    vec3 forward = normalize(lookAt - ro);
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
-    vec3 up = cross(forward, right);
-    return normalize(forward + right * uv.x + up * uv.y);
-}
-
-void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
-{
-    // Camera
-    ray.o = vec3(-0.4, -2.0, -6.);
-    ray.o.xz = mul(ray.o.xz, rot(0.03 * sin(TIME * 0.6)));
-    ray.o.y += sin(TIME * 0.2) * 0.3;
-    ray.d = getRayDir(ray.o, vec3(-1.0, -2.0, -1.), uv);
-    
-    
+void render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
+{    
     // Ray marching
-    int hit = 0;  
-    float d = 0.01;      // Ray distance travelled.
-    float maxd = 50.0;   // Max ray distance.
-    
     vec3 p;
-    float outside = 1.0; // Tracks inside/outside of bubble (for refraction)
-    
-    for (float steps = 0.0; steps < 150.0; steps++)
+
+    // Tracks inside and outside of bubble (for refraction)
+    float outside = 1.0;    
+        
+    int hit = 0;  
+    float d = MIN_DIST;
+    for (float i = 0.0; i < MAX_MARCHING_STEPS; i++)
     {
-        p = ray.o + ray.d * d;
+        p = ray.o + d * ray.d;
         vec2 h = sceneSDF(p);
 
-        if (h.x < 0.001)
+        if (h.x < EPSILON)
         {
             if (h.y == 4.5)
             {
@@ -355,27 +334,25 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
             break;
         }
         
-        if (d > maxd)
+        if (d > MAX_DIST)
             break;
 
         d += h.x;
     }
 
-    // Shading
+    // Shading, Texturing and Material details
     vec3 deepColor = vec3(0.02, 0.08, 0.2) * 0.1;
     vec3 lightPos = vec3(-1.0, 10.0, 1.0);
     vec3 col = deepColor;
     
     if (hit > 0)
-    {
-        
+    { 
         vec3 n = getNormal(p);
         vec3 mat = vec3(0.15, 0.25, 0.6);
         if (hit == 1)
         {
             // Sea
-            n.y = -n.y;
-            
+            n.y = -n.y;   
         }
         else
         {
@@ -384,20 +361,20 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
                 // Sand
                 mat += vec3(0.1, 0.1, 0.0); 
             }
+            else if (hit == 6)
+            {
+                // Coral            
+                mat += vec3(1.32, 0.35, .15); // vec3(0.255, 0.191, 0.0);       
+            }
+            else if (hit == 7)
+            {
+                // Coral     
+                mat += vec3(1.12, 0.25, .15) * 0.5; // vec3(0.255, 0.191, 0.0); 
+            }
             else if (hit == 5)
             {
                 // Plant
                 mat += vec3(0.0, 0.2, 0.0);            
-            }
-            else if (hit == 6)
-            {
-                // Coral     vec3(0.255, 0.191, 0.0);        
-                mat += vec3(1.32, 0.35, .15);       
-            }
-            else if (hit == 7)
-            {
-                // Coral     vec3(0.255, 0.191, 0.0);
-                mat += vec3(1.12, 0.25, .15) * 0.5; 
             }
             else if (hit == 8)
             {
@@ -405,16 +382,15 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
                 mat += vec3(0.0, 0.2, 0.0);           
             }
 
-            // Visual Effects
+            // Shadows and Visual Effects
             mat += smoothstep(0.0, 1.0, (1.0 - caustic(p * 0.5)) * 0.5); // Caustics
             mat *= 0.4 + 0.6 * godLight(p, lightPos);                    // God light
-            mat *= ambientOcculsion(p, n);                               // Ambient occlusion
-                
-            // Shadows
+            mat *= ambientOcclusion(p, n);                               // Ambient occlusion
+               
             vec3 lightDir = normalize(lightPos - p);
-            float sha1 = max(0.0, sceneSDF(p + lightDir * 0.25).x / 0.25);
-            float sha2 = max(0.0, sceneSDF(p + lightDir).x);
-            mat *= clamp((sha1 + sha2) * 0.5, 0.0, 1.0);
+            float s1 = max(0.0, sceneSDF(p + lightDir * 0.25).x / 0.25);
+            float s2 = max(0.0, sceneSDF(p + lightDir).x);
+            mat *= clamp((s1 + s2) * 0.5, 0.0, 1.0);                     // Shadows
         }
         
         // Lighting
@@ -425,40 +401,44 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         float diff = max(0.0, dot(lightToPoint, n));
 
         col = (amb + diff) * mat;
-        
     }
     
     // Fog
-    float fog = clamp(pow(d / maxd * 2.0, 1.5), 0.0, 1.0);
+    float fog = clamp(pow(d / MAX_DIST * 2.0, 1.5), 0.0, 1.0);
     col = lerp(col, deepColor, fog);
         
-    
     // God rays
     col = lerp(col, vec3(0.15, 0.25, 0.3) * 12.0, cast(ray.o, ray.d, lightPos, d));
     
+    // Gamma correction
+    col = pow(col, vec3(0.4545, 0.4545, 0.4545));                       
 
-    // Post processing
-    col = pow(col, vec3(0.4545, 0.4545, 0.4545)); // Gamma correction 
-    //col *= 1.0 - 0.5 * length(uv); // Vignette
     fragColor = vec4(col, 1.0);
     
 }
 
-float4 main(PixelShaderInput input) : SV_Target
-{
-    // specify primary ray: 
+float4 main(PixelShaderInput input) : SV_Target {
+    // specify primary ray 
     Ray ray;
+
+    // set eye position
+    ray.o = eye;
+    ray.o.xz = mul(ray.o.xz, rot(0.03 * sin(TIME * 0.6)));
+    ray.o.y += sin(TIME * 0.2) * 0.3;
 
     // set ray direction in view space 
     float dist2Imageplane = 5.0;
     float3 viewDir = float3(input.canvasXY, -dist2Imageplane);
     viewDir = normalize(viewDir);
 
-    ray.o = float3(0, 0, 15);
-    ray.d = viewDir;
+    // transform viewDir using the inverse view matrix
+    float4x4 viewTrans = transpose(view);
+    ray.d = viewDir.x * viewTrans._11_12_13 + viewDir.y * viewTrans._21_22_23
+        + viewDir.z * viewTrans._31_32_33;
+    
     
     float4 fragColor;
     
-    render(ray, fragColor, input.pos.xy, input.canvasXY);
+    render(ray, fragColor, input.pos.xy);
     return fragColor;
 }

@@ -10,6 +10,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		DirectX::XMFLOAT4X4 projection;
 		DirectX::XMFLOAT4   time;
 		DirectX::XMFLOAT4   resolution;
+		DirectX::XMFLOAT4   eye;
 	};
 
 	// Used to send per-vertex data to the vertex shader.
