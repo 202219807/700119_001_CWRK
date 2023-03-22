@@ -31,17 +31,9 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		std::shared_ptr<DX::DeviceResources>		    m_deviceResources;
 													    
 		// Direct3D resources for cube geometry.	    
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout1;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer1;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer1;
-
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout2;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer2;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer2;
-
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout3;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer3;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer3;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer;
 
 		// Shader pointers
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader01;
@@ -55,16 +47,16 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader03;
 
 		// Constant buffers
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer1;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer2;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer3;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
 		
 		// Rasterization state
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_rasterizerState;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
-		uint32											m_indexCount;
+		uint32											m_indexCount1;
+		uint32											m_indexCount2;
+		uint32											m_indexCount3;
 
 		// Variables used with the rendering loop.
 		bool											m_loadingComplete;

@@ -25,13 +25,13 @@ PixelShaderInput main(VertexShaderInput input)
     
     float4 inPos = float4(input.pos, 1.0);
 
-    output.pos = float4(sign(inPos.xy), 0, 1);
-    /*output.pos = mul(float4(20 * inPos.xy, inPos.zw), model);
+    // output.pos = float4(sign(inPos.xy), 0, 1);
+    output.pos = mul(float4(20 * inPos.xy, inPos.zw), model);
     output.pos = mul(output.pos, view);
-    output.pos = mul(output.pos, projection);*/
+    output.pos = mul(output.pos, projection);
     
     float aspectRatio = projection._m11 / projection._m00;
-    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.0);
+    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.8); // 1.0
 
     return output;
 }
