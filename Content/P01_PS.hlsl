@@ -423,8 +423,8 @@ float4 main(PixelShaderInput input) : SV_Target {
 
     // set eye position
     ray.o = eye;
-    ray.o.xz = mul(ray.o.xz, rot(0.03 * sin(TIME * 0.6)));
-    ray.o.y += sin(TIME * 0.2) * 0.3;
+    //ray.o.xz = mul(ray.o.xz, rot(0.03 * sin(TIME * 0.6)));
+    //ray.o.y += sin(TIME * 0.2) * 0.3;
 
     // set ray direction in view space 
     float dist2Imageplane = 5.0;
@@ -435,7 +435,6 @@ float4 main(PixelShaderInput input) : SV_Target {
     float4x4 viewTrans = transpose(view);
     ray.d = viewDir.x * viewTrans._11_12_13 + viewDir.y * viewTrans._21_22_23
         + viewDir.z * viewTrans._31_32_33;
-    
     
     float4 fragColor;
     

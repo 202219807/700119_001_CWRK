@@ -5,6 +5,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
     float4 timer;
     float4 resolution;
+    float4 eye;
 };
 
 struct VertexShaderInput
@@ -24,14 +25,28 @@ PixelShaderInput main(VertexShaderInput input)
     PixelShaderInput output;
     
     float4 inPos = float4(input.pos, 1.0);
+    
+    // Transformations
+    inPos.xyz *= 5.0;
+    // inPos.x -= 1.0;
+    inPos.z -= 1.0;
+    
+    // inPos = float4(sign(inPos.xy), 0, 1);
 
-    // output.pos = float4(sign(inPos.xy), 0, 1);
-    output.pos = mul(float4(20 * inPos.xy, inPos.zw), model);
-    output.pos = mul(output.pos, view);
-    output.pos = mul(output.pos, projection);
+    inPos = mul(float4(10 * inPos.xy, inPos.zw), model);
+    inPos = mul(inPos, view);
+    inPos = mul(inPos, projection);
+    output.pos = inPos;
     
     float aspectRatio = projection._m11 / projection._m00;
-    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.8); // 1.0
+    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.8); // 1.8
 
     return output;
 }
+
+
+
+
+
+
+

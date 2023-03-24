@@ -30,10 +30,16 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources>		    m_deviceResources;
 													    
-		// Direct3D resources for cube geometry.	    
+		// Direct3D resources for primitive geometries.	    
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer;
+		
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer01;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer02;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer03;
+
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer01;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer02;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer03;
 
 		// Shader pointers
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader01;
@@ -49,14 +55,23 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		// Constant buffers
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
 		
-		// Rasterization state
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_rasterizerState;
+		// Depth stencil
+		Microsoft::WRL::ComPtr<ID3D11Texture2D>			m_depthStencil;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView>	m_depthStencilView;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilState>	m_depthStencilStateEnv;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilState>	m_depthStencilStateObj;
+
+		// Rasterization
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_cullRasterizerState;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_noCullRasterizerState;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_wireframeRasterizerState;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_envRasterizerState;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
-		uint32											m_indexCount1;
-		uint32											m_indexCount2;
-		uint32											m_indexCount3;
+		uint32											m_indexCount01;
+		uint32											m_indexCount02;
+		uint32											m_indexCount03;
 
 		// Variables used with the rendering loop.
 		bool											m_loadingComplete;

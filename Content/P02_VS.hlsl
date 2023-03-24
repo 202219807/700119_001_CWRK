@@ -5,9 +5,8 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
     float4 timer;
     float4 resolution;
+    float4 eye;
 };
-
-static float time = timer.x;
 
 struct VertexShaderInput
 {
@@ -20,6 +19,8 @@ struct PixelShaderInput
     float4 pos : SV_POSITION;
     float3 color : COLOR0;
 };
+
+static float time = timer.x;
 
 float3 GradientShade(float3 position)
 {
@@ -46,8 +47,11 @@ PixelShaderInput main(VertexShaderInput input)
 {
     PixelShaderInput output;
 
-    float3 inPos = float4(input.pos, 1.0);
+    float4 inPos = float4(input.pos, 1.0);
+
+    // Transformations
     inPos.xyz *= float4(1.0, 2.0, 1.0, 1.0);
+    inPos.z += 15.0;
     inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
     
     // Create the rotation matrix
@@ -61,12 +65,11 @@ PixelShaderInput main(VertexShaderInput input)
     );
 
     inPos = mul(inPos, rotationMatrix);
-    /*float4 sysPos = float4(inPos, 1.0);
-    output.pos = mul(float4(20 * sysPos.xy, sysPos.zw), model);*/
-    output.pos = mul(inPos, model);
-    output.pos = mul(output.pos, view);
-    output.pos = mul(output.pos, projection);
 
+    inPos = mul(inPos, model);
+    inPos = mul(inPos, view);
+    inPos = mul(inPos, projection);
+    output.pos = inPos;
 
     output.color = GradientShade(output.pos);
 
