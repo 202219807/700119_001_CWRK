@@ -32,6 +32,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 													    
 		// Direct3D resources for primitive geometries.	    
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout02;
 		
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer01;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer02;
@@ -69,6 +70,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
+
+
 		uint32											m_indexCount01;
 		uint32											m_indexCount02;
 		uint32											m_indexCount03;

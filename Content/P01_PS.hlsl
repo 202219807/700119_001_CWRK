@@ -25,7 +25,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
  * your applicationand pass them to pixel shaders as 
  * shader constants by means of constant buffer. 
  */
-static const int    MAX_MARCHING_STEPS = 255;
+static const int    MAX_MARCHING_STEPS = 200;
 static const float  MIN_DIST           = 0.0;
 static const float  MAX_DIST           = 100.0;
 static const float  EPSILON            = 0.0001;
@@ -113,15 +113,13 @@ float surfaceSDF(vec2 p)
     float amp = 0.2;
     float a = 0.0;
     
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         float a = noise(vec3(p + vec2(1.0, 1.0) * (TIME + 1.0) * 0.8, 1.0));
-        a -= noise(vec3(p + vec2(6.0, 0.1) * TIME * 0.5, 1.0));
-        
+        a -= noise(vec3(p + vec2(6.0, 0.8) * TIME * 0.5, 1.0));
         sum += amp * a;
-        
         amp *= 0.8;
-        p *= 4.0;
+        p *= 3.0;
     }
     return clamp(0.05 + sum * 0.2, 0.0, 1.0);
 }

@@ -66,13 +66,13 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 	// static const XMVECTORF32 eye = { 0.0f, -1.5f, 10.0f, 0.0f };     // for p01
 	// static const XMVECTORF32 at = { 0.0f, -2.0f, 0.0f, 0.0f };
 
-	static const XMVECTORF32 eye = { 0.0f, -1.5f, 15.0f, 0.0f };     // for p01 + p03
+	static const XMVECTORF32 eye = { 0.0f, -1.0f, 15.0f, 0.0f };     // for p01 + p03
 	static const XMVECTORF32 at = { 0.0f, -1.8f, 0.5f, 0.0f };
 
 
 	// static const XMVECTORF32 eye = { 0.0f, 1.0f, 5.5f, 0.0f };     // for p01 + p02 + p03
+	//static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-	// static const XMVECTORF32 at = { 0.0f, -2.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
@@ -146,7 +146,22 @@ void SceneRenderer::Render()
 		return;
 	}
 
+	UINT stride = sizeof(VertexPositionColor);
+	UINT offset = 0;
+
 	auto context = m_deviceResources->GetD3DDeviceContext();
+
+
+
+
+
+	
+
+
+
+
+
+
 
 	// Render pipeline 01
 	context->OMSetDepthStencilState(m_depthStencilStateEnv.Get(), 1);
@@ -165,8 +180,8 @@ void SceneRenderer::Render()
 	);
 
 	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
+	stride = sizeof(VertexPositionColor);
+	offset = 0;
 	context->IASetVertexBuffers(
 		0,
 		1,
@@ -225,97 +240,102 @@ void SceneRenderer::Render()
 	);
 
 
+
+
+
+
+
 	// Render pipeline 02
-	 context->OMSetDepthStencilState(m_depthStencilStateObj.Get(), 1);
+	//context->OMSetDepthStencilState(m_depthStencilStateObj.Get(), 1);
 
-	 context->RSSetState(m_cullRasterizerState.Get());
+	//context->RSSetState(m_noCullRasterizerState.Get());
 
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
-	);
+	//// Prepare the constant buffer to send it to the graphics device.
+	//context->UpdateSubresource1(
+	//	m_constantBuffer.Get(),
+	//	0,
+	//	NULL,
+	//	&m_constantBufferData,
+	//	0,
+	//	0,
+	//	0
+	//);
 
-	// Each vertex is one instance of the VertexPositionColor struct.
-	stride = sizeof(VertexPositionColor);
-	offset = 0;
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer02.GetAddressOf(),
-		&stride,
-		&offset
-	);
+	//// Each vertex is one instance of the VertexPositionColor struct.
+	//stride = sizeof(VertexPositionColor);
+	//offset = 0;
+	//context->IASetVertexBuffers(
+	//	0,
+	//	1,
+	//	m_vertexBuffer02.GetAddressOf(),
+	//	&stride,
+	//	&offset
+	//);
 
-	context->IASetIndexBuffer(
-		m_indexBuffer02.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-	);
+	//context->IASetIndexBuffer(
+	//	m_indexBuffer02.Get(),
+	//	DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+	//	0
+	//);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	context->IASetInputLayout(m_inputLayout.Get());
+	//context->IASetInputLayout(m_inputLayout02.Get());
 
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader02.Get(),
-		nullptr,
-		0
-	);
+	//// Attach our vertex shader.
+	//context->VSSetShader(
+	//	m_vertexShader02.Get(),
+	//	nullptr,
+	//	0
+	//);
 
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
+	////// Send the constant buffer to the graphics device.
+	////context->VSSetConstantBuffers1(
+	////	0,
+	////	1,
+	////	m_constantBuffer.GetAddressOf(),
+	////	nullptr,
+	////	nullptr
+	////);
 
-	// Attach our geometry shader.
-	context->GSSetShader(
-		m_geometryShader02.Get(),
-		nullptr,
-		0
-	);
+	//// Attach our geometry shader.
+	//context->GSSetShader(
+	//	m_geometryShader02.Get(),
+	//	nullptr,
+	//	0
+	//);
 
-	// Send the constant buffer to the graphics device.
-	context->GSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
+	//// Send the constant buffer to the graphics device.
+	//context->GSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_constantBuffer.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
 
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader02.Get(),
-		nullptr,
-		0
-	);
+	//// Attach our pixel shader.
+	//context->PSSetShader(
+	//	m_pixelShader02.Get(),
+	//	nullptr,
+	//	0
+	//);
 
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
+	////// Send the constant buffer to the graphics device.
+	////context->PSSetConstantBuffers1(
+	////	0,
+	////	1,
+	////	m_constantBuffer.GetAddressOf(),
+	////	nullptr,
+	////	nullptr
+	////);
 
-	// Draw the object 2.
-	context->DrawIndexed(
-		m_indexCount02,
-		0,
-		0
-	);
+	//// Draw the object 2.
+	//context->DrawIndexed(
+	//	m_indexCount02,
+	//	0,
+	//	0
+	//);
 
 
 	// Render pipeline 03
@@ -393,6 +413,8 @@ void SceneRenderer::Render()
 		0,
 		0
 	);
+
+	
 
 }
 
@@ -498,7 +520,7 @@ void SceneRenderer::CreateDeviceDependentResources()
 				ARRAYSIZE(vertexDesc),
 				&fileData[0],
 				fileData.size(),
-				&m_inputLayout
+				&m_inputLayout02
 			)
 		);
 		});

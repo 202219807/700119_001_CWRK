@@ -3,19 +3,22 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix model;
 	matrix view;
 	matrix projection;
+	float4 timer;
+	float4 resolution;
+	float4 eye;
 };
 
 struct GeometryShaderInput
 {
-	float4 pos : SV_POSITION;
-	float3 color : COLOR0;
+	float4 pos		: SV_POSITION;
+	float3 color	: COLOR0;
 };
 
 struct PixelShaderInput
 {
-	float4 pos : SV_POSITION;
-	float3 color : COLOR0;
-	float2 uv: TEXCOORD0;
+	float4 pos		: SV_POSITION;
+	float3 color	: COLOR0;
+	float2 uv		: TEXCOORD0;
 };
 
 [maxvertexcount(6)]
