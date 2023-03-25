@@ -15,7 +15,7 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::_202219807_ACW_700119_D3D11_UWP_APPMain
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_sceneRenderer = std::unique_ptr<SceneRenderer>(new SceneRenderer(m_deviceResources));
+	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
 
 	m_fpsTextRenderer = std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
 
@@ -37,7 +37,7 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::~_202219807_ACW_700119_D3D11_UWP_APPMai
 void _202219807_ACW_700119_D3D11_UWP_APPMain::CreateWindowSizeDependentResources() 
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
-	m_sceneRenderer->CreateWindowSizeDependentResources();
+	m_p01_Implicit->CreateWindowSizeDependentResources();
 }
 
 // Updates the application state once per frame.
@@ -47,7 +47,7 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::Update()
 	m_timer.Tick([&]()
 	{
 		// TODO: Replace this with your app's content update functions.
-		m_sceneRenderer->Update(m_timer);
+		m_p01_Implicit->Update(m_timer);
 		m_fpsTextRenderer->Update(m_timer);
 	});
 }
@@ -78,7 +78,7 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
-	m_sceneRenderer->Render();
+	m_p01_Implicit->Render();
 	m_fpsTextRenderer->Render();
 
 	return true;
@@ -87,14 +87,14 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 // Notifies renderers that device resources need to be released.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
-	m_sceneRenderer->ReleaseDeviceDependentResources();
+	m_p01_Implicit->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
 // Notifies renderers that device resources may now be recreated.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
-	m_sceneRenderer->CreateDeviceDependentResources();
+	m_p01_Implicit->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }

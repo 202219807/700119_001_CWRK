@@ -61,11 +61,29 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="_202219807_ACW_700119_D3D11_UWP_APPMain.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Content\P01_Implicit.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P02_Explicit.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P03_Explicit.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="_202219807_ACW_700119_D3D11_UWP_APPMain.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Content\P01_Implicit.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P02_Explicit.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P03_Explicit.h">
+      <Filter>Content</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">

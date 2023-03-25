@@ -2,7 +2,7 @@
 
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
-#include "Content\SceneRenderer.h"
+#include "Content\P01_Implicit.h"
 #include "Content\FpsTextRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
@@ -23,13 +23,13 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 	private:
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
+		std::shared_ptr<DX::DeviceResources>				m_deviceResources;
 
 		// TODO: Replace with your own content renderers.
-		std::unique_ptr<SceneRenderer> m_sceneRenderer;
-		std::unique_ptr<FpsTextRenderer> m_fpsTextRenderer;
+		std::unique_ptr<P01_Implicit>						m_p01_Implicit;
+		std::unique_ptr<FpsTextRenderer>					m_fpsTextRenderer;
 
 		// Rendering loop timer.
-		DX::StepTimer m_timer;
+		DX::StepTimer										m_timer;
 	};
 }

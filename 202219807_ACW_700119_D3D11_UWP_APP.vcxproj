@@ -252,6 +252,9 @@
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\DeviceResources.h" />
+    <ClInclude Include="Content\P01_Implicit.h" />
+    <ClInclude Include="Content\P02_Explicit.h" />
+    <ClInclude Include="Content\P03_Explicit.h" />
     <ClInclude Include="_202219807_ACW_700119_D3D11_UWP_APPMain.h" />
     <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\StepTimer.h" />
@@ -263,6 +266,9 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
+    <ClCompile Include="Content\P01_Implicit.cpp" />
+    <ClCompile Include="Content\P02_Explicit.cpp" />
+    <ClCompile Include="Content\P03_Explicit.cpp" />
     <ClCompile Include="_202219807_ACW_700119_D3D11_UWP_APPMain.cpp" />
     <ClCompile Include="Content\FpsTextRenderer.cpp" />
     <ClCompile Include="Content\SceneRenderer.cpp" />

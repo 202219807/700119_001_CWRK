@@ -414,21 +414,11 @@ void SceneRenderer::Render()
 		0
 	);
 
-	
-
 }
 
 void SceneRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-
-	// Graphic Pipeline 01:
-	// 
-	// Implicit modeling with signed distance based ray marching
-	// Ocean surface and underwater effects.
-	// Reflective/Refractive Bubbles.
-	// Underwater plantations.
-	// Underwater coral object(Mandelbulb derivate)
 
 	auto loadPipeline01_VSTask = DX::ReadDataAsync(L"P01_VS.cso");
 	auto loadPipeline01_PSTask = DX::ReadDataAsync(L"P01_PS.cso");
