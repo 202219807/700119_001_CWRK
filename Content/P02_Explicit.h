@@ -8,7 +8,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 {
 	// Graphic Pipeline 02:
 	// 
-	// Underwater coral object generated procedurally using a vertex shader..
+	// Underwater coral object generated procedurally 
+	// using a vertex shader
 
 	class P02_Explicit
 	{

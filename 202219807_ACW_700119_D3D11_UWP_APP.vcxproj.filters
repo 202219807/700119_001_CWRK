@@ -70,6 +70,12 @@
     <ClCompile Include="Content\P03_Explicit.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Content\P04_Explicit.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P05_Explicit.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
@@ -82,6 +88,12 @@
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\P03_Explicit.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P04_Explicit.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P05_Explicit.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
@@ -106,13 +118,25 @@
     <FxCompile Include="Content\P02_VS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
-    <FxCompile Include="Content\P02_GS.hlsl">
-      <Filter>Content</Filter>
-    </FxCompile>
     <FxCompile Include="Content\P03_VS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
     <FxCompile Include="Content\P03_PS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_GS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_PS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_VS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P03_HS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P03_DS.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>

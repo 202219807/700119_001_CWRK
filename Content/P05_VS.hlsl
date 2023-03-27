@@ -50,7 +50,7 @@ GeometryShaderInput main(VertexShaderInput input)
     float4 inPos = float4(input.pos, 1.0);
 
     // Transformations
-    inPos.xyz *= 1.0;
+    inPos.xyz *= 5.0;
 
     inPos.z -= 15.0;
     inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
