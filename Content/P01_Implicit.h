@@ -12,7 +12,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 	// Ocean surface and underwater effects.
 	// Reflective/Refractive Bubbles.
 	// Underwater plantations.
-	// Underwater coral object(Mandelbulb derivate)
+	// Underwater coral object (Mandelbulb derivate)
 
 	class P01_Implicit
 	{

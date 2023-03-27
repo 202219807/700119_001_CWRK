@@ -16,6 +16,8 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::_202219807_ACW_700119_D3D11_UWP_APPMain
 
 	// TODO: Replace this with your app's content initialization.
 	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
+	// m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
 
 	m_fpsTextRenderer = std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
 
@@ -38,6 +40,8 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::CreateWindowSizeDependentResources
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
 	m_p01_Implicit->CreateWindowSizeDependentResources();
+	m_p02_Explicit->CreateWindowSizeDependentResources();
+	// m_p05_Explicit->CreateWindowSizeDependentResources();
 }
 
 // Updates the application state once per frame.
@@ -48,6 +52,8 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::Update()
 	{
 		// TODO: Replace this with your app's content update functions.
 		m_p01_Implicit->Update(m_timer);
+		m_p02_Explicit->Update(m_timer);
+		// m_p05_Explicit->Update(m_timer);
 		m_fpsTextRenderer->Update(m_timer);
 	});
 }
@@ -79,6 +85,8 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
 	m_p01_Implicit->Render();
+	m_p02_Explicit->Render();
+	// m_p05_Explicit->Render();
 	m_fpsTextRenderer->Render();
 
 	return true;
@@ -88,6 +96,8 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
 	m_p01_Implicit->ReleaseDeviceDependentResources();
+	m_p02_Explicit->ReleaseDeviceDependentResources();
+	m_p05_Explicit->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
@@ -95,6 +105,8 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
 	m_p01_Implicit->CreateDeviceDependentResources();
+	m_p02_Explicit->CreateDeviceDependentResources();
+	// m_p05_Explicit->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }

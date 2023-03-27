@@ -4,16 +4,16 @@
 #include "..\Common\StepTimer.h"
 #include "ShaderStructures.h"
 
-namespace _202219807_ACW_700119_D3D11_UWP_APP
+namespace _202219807_ACW_700119_D3D11_UWP_APP 
 {
-	// Graphic Pipeline 02:
+	// Graphic Pipeline 05:
 	// 
-	// Underwater coral object generated procedurally using a vertex shader..
+	// A shoal of colourful coral reef fish created as a particle system.
 
-	class P02_Explicit
+	class P05_Explicit
 	{
 	public:
-		P02_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		P05_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
@@ -31,6 +31,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// Shader pointers
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader;
+		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_geometryShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader;
 
 		// Constant buffers

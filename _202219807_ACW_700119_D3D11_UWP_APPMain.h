@@ -3,6 +3,8 @@
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
 #include "Content\P01_Implicit.h"
+#include "Content\P02_Explicit.h"
+#include "Content\P05_Explicit.h"
 #include "Content\FpsTextRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
@@ -27,6 +29,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// TODO: Replace with your own content renderers.
 		std::unique_ptr<P01_Implicit>						m_p01_Implicit;
+		std::unique_ptr<P02_Explicit>						m_p02_Explicit;
+		std::unique_ptr<P05_Explicit>						m_p05_Explicit;
 		std::unique_ptr<FpsTextRenderer>					m_fpsTextRenderer;
 
 		// Rendering loop timer.

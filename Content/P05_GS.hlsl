@@ -39,17 +39,17 @@ void main(point GeometryShaderInput input[1], inout
 	 float3(1, -1, 0),
 	};
 
-	 // triangle 1 
- 
+	// triangle 1 
+
 	float quadSize = 0.15;
-	
+
 	// vertex 1:  
 	output.pos = vPos + float4(quadSize * g_positions[0], 0.0);
 	output.pos = mul(output.pos, projection);
 
 	output.color = input[0].color;
 	output.uv = (sign(input[0].pos.xy) + 1.0) / 2.0;
-	
+
 	OutputStream.Append(output);
 
 	// vertex 2:  
@@ -58,7 +58,7 @@ void main(point GeometryShaderInput input[1], inout
 
 	output.color = input[0].color;
 	output.uv = (sign(input[0].pos.xy) + 1.0) / 2.0;
-	
+
 	OutputStream.Append(output);
 
 	// vertex 3:  
@@ -73,7 +73,7 @@ void main(point GeometryShaderInput input[1], inout
 	OutputStream.RestartStrip();
 
 	//triangle 2 
-	
+
 	quadSize = 0.1;
 
 	// vertex 1:  

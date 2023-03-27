@@ -5,7 +5,6 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix projection;
 	float4 timer;
 	float4 resolution;
-	float4 eye;
 };
 
 struct VertexShaderInput
@@ -41,17 +40,18 @@ PixelShaderInput main(VertexShaderInput input)
 	inPos.y = r * sin(input.pos.y) * sin(input.pos.x) - 2.0;
 	inPos.z = r * cos(input.pos.y * sin(time * 0.5));
 	
-	inPos.xyz *= 8.5;	
+	inPos.xyz *= 5.0;	
 	inPos.z -= 10.0;
-	inPos.x += 20.0;
+	// inPos.x += 5.0;
 	inPos.y += 5.0;
 
-	inPos = mul(inPos, model);
+	//inPos = mul(inPos, model);
 	inPos = mul(inPos, view);
 	inPos = mul(inPos, projection);
+	inPos.x += 15.0;
 	output.pos = inPos;
 
-	output.color = float3(0.96, 0.48, 0.10); // input.color;
+	output.color = input.color; // float3(0.96, 0.48, 0.10); // input.color;
 
 	return output;
 }

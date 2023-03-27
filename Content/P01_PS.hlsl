@@ -113,7 +113,7 @@ float surfaceSDF(vec2 p)
     float amp = 0.2;
     float a = 0.0;
     
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
     {
         float a = noise(vec3(p + vec2(1.0, 1.0) * (TIME + 1.0) * 0.8, 1.0));
         a -= noise(vec3(p + vec2(6.0, 0.8) * TIME * 0.5, 1.0));
@@ -241,9 +241,9 @@ float2 sceneSDF(vec3 p)
     return min2(vec2(surface, 1.5),
            min2(vec2(floorSDF(p), 3.5),
            min2(vec2(plantsSDF(p - vec3(0.0, 0.0, 0.0)), 5.5),
-           min2(vec2(coralSDF(p - vec3(-3.0, -3.0, 0.0)), 6.5),
-           min2(vec2(plantsSDF(p - vec3(-2.5, 0.0, -1.3)), 8.5),
            min2(vec2(coralSDF(p - vec3(-3.0, -2.4, -2.8)), 7.5),
+           min2(vec2(plantsSDF(p - vec3(-2.5, 0.0, -1.3)), 8.5),
+           min2(vec2(coralSDF(p - vec3(-3.0, -3.0, 0.0)), 6.5),
            min2(vec2(bubbleSDF(pp, TIME - 0.8), 4.5),
                 vec2(bubbleSDF(pp, TIME), 2.5))))))));
 }
