@@ -246,67 +246,51 @@ void SceneRenderer::Render()
 
 
 	// Render pipeline 02
-	//context->OMSetDepthStencilState(m_depthStencilStateObj.Get(), 1);
+	context->OMSetDepthStencilState(m_depthStencilStateObj.Get(), 1);
 
-	//context->RSSetState(m_noCullRasterizerState.Get());
+	context->RSSetState(m_noCullRasterizerState.Get());
 
-	//// Prepare the constant buffer to send it to the graphics device.
-	//context->UpdateSubresource1(
-	//	m_constantBuffer.Get(),
-	//	0,
-	//	NULL,
-	//	&m_constantBufferData,
-	//	0,
-	//	0,
-	//	0
-	//);
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData,
+		0,
+		0,
+		0
+	);
 
-	//// Each vertex is one instance of the VertexPositionColor struct.
-	//stride = sizeof(VertexPositionColor);
-	//offset = 0;
-	//context->IASetVertexBuffers(
-	//	0,
-	//	1,
-	//	m_vertexBuffer02.GetAddressOf(),
-	//	&stride,
-	//	&offset
-	//);
+	// Each vertex is one instance of the VertexPositionColor struct.
+	stride = sizeof(VertexPositionColor);
+	offset = 0;
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer02.GetAddressOf(),
+		&stride,
+		&offset
+	);
 
-	//context->IASetIndexBuffer(
-	//	m_indexBuffer02.Get(),
-	//	DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-	//	0
-	//);
+	context->IASetIndexBuffer(
+		m_indexBuffer02.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
 
-	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	//context->IASetInputLayout(m_inputLayout02.Get());
+	context->IASetInputLayout(m_inputLayout02.Get());
 
-	//// Attach our vertex shader.
-	//context->VSSetShader(
-	//	m_vertexShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	////// Send the constant buffer to the graphics device.
-	////context->VSSetConstantBuffers1(
-	////	0,
-	////	1,
-	////	m_constantBuffer.GetAddressOf(),
-	////	nullptr,
-	////	nullptr
-	////);
-
-	//// Attach our geometry shader.
-	//context->GSSetShader(
-	//	m_geometryShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader02.Get(),
+		nullptr,
+		0
+	);
 
 	//// Send the constant buffer to the graphics device.
-	//context->GSSetConstantBuffers1(
+	//context->VSSetConstantBuffers1(
 	//	0,
 	//	1,
 	//	m_constantBuffer.GetAddressOf(),
@@ -314,28 +298,44 @@ void SceneRenderer::Render()
 	//	nullptr
 	//);
 
-	//// Attach our pixel shader.
-	//context->PSSetShader(
-	//	m_pixelShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
+	// Attach our geometry shader.
+	context->GSSetShader(
+		m_geometryShader02.Get(),
+		nullptr,
+		0
+	);
 
-	////// Send the constant buffer to the graphics device.
-	////context->PSSetConstantBuffers1(
-	////	0,
-	////	1,
-	////	m_constantBuffer.GetAddressOf(),
-	////	nullptr,
-	////	nullptr
-	////);
+	// Send the constant buffer to the graphics device.
+	context->GSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 
-	//// Draw the object 2.
-	//context->DrawIndexed(
-	//	m_indexCount02,
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader02.Get(),
+		nullptr,
+		0
+	);
+
+	//// Send the constant buffer to the graphics device.
+	//context->PSSetConstantBuffers1(
 	//	0,
-	//	0
+	//	1,
+	//	m_constantBuffer.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
 	//);
+
+	// Draw the object 2.
+	context->DrawIndexed(
+		m_indexCount02,
+		0,
+		0
+	);
 
 
 	// Render pipeline 03
@@ -389,6 +389,13 @@ void SceneRenderer::Render()
 		m_constantBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
+	);
+
+	// Attach our pixel shader.
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
 	);
 
 	// Attach our pixel shader.
