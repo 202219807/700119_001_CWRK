@@ -41,7 +41,7 @@ void main(point GeometryShaderInput input[1], inout
 
 	// triangle 1 
 
-	float quadSize = 1.15;
+	float quadSize = 0.15;
 
 	// vertex 1:  
 	output.pos = vPos + float4(quadSize * g_positions[0], 0.0);
@@ -74,7 +74,7 @@ void main(point GeometryShaderInput input[1], inout
 
 	//triangle 2 
 
-	quadSize = 1.5;
+	quadSize = 0.1;
 
 	// vertex 1:  
 	output.pos = vPos + float4(quadSize * g_positions[1], 0.0);

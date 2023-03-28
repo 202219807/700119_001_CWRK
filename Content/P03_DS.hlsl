@@ -14,7 +14,7 @@ struct VertexShaderOutput
 };
 
 struct QuadTessParam {
-	float Edges[4] : SV_TessFactor;
+	float Edges[4]  : SV_TessFactor;
 	float Inside[2] : SV_InsideTessFactor;
 };
 
@@ -63,7 +63,6 @@ VertexShaderOutput main(QuadTessParam input,
 		+ UV.y * QuadPos[3].xyz;
 	
 	float3 uvPos = (1.0 - UV.x) * vPos1 + UV.x * vPos2;
-	uvPos.y -= 2.0;
 	uvPos.z -= 2.0;
 
 	float3 spherePos;
@@ -77,12 +76,10 @@ VertexShaderOutput main(QuadTessParam input,
 
 	output.pos = float4(spherePos, 1);
 	output.pos.xyz += noise(spherePos) * (spherePos / radius);
-
-
+	output.pos.x -= 1.0;
+	output.pos.y -= 0.5;
+	output.pos.xz *= noise(output.pos.xyz) * sin(timer.x);
+	
 	return output;
-
-
-
-
 
 }

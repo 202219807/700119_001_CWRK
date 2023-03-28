@@ -38,10 +38,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
 
 		// Rasterization
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_wireframeRasterizerState;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_noCullRasterizerState;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_backCullRasterizerState;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_frontCullRasterizerState;
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer				m_constantBufferData;

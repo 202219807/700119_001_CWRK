@@ -56,9 +56,9 @@ void P05_Explicit::CreateWindowSizeDependentResources()
 	);
 
 	// Default: Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-
-	static const XMVECTORF32 eye = { 0.0f, -1.0f, 14.0f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -1.2f, 0.0f, 0.0f };
+	
+	static const XMVECTORF32 eye = { 0.0f, -1.0f, 15.0f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, -1.8f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
@@ -72,7 +72,6 @@ void P05_Explicit::Update(DX::StepTimer const& timer)
 
 	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
 	XMStoreFloat4(&m_constantBufferData.time, time);
-
 
 	D3D11_VIEWPORT viewport;
 	UINT numViewports = 1;
@@ -94,8 +93,6 @@ void P05_Explicit::Render()
 	}
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	context->RSSetState(m_noCullRasterizerState.Get());
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
@@ -146,6 +143,20 @@ void P05_Explicit::Render()
 		nullptr
 	);
 
+	// detach our hull shader.
+	context->HSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// detach our domain shader.
+	context->DSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
 	// Attach our geometry shader.
 	context->GSSetShader(
 		m_geometryShader.Get(),
@@ -161,6 +172,16 @@ void P05_Explicit::Render()
 		nullptr,
 		nullptr
 	);
+
+	// Rasterization
+	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+
+	auto device = m_deviceResources->GetD3DDevice();
+
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	device->CreateRasterizerState(&rasterizerDesc,
+		m_rasterizerState.GetAddressOf());
 
 	// Attach our pixel shader.
 	context->PSSetShader(
@@ -189,7 +210,6 @@ void P05_Explicit::Render()
 void P05_Explicit::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-
 	auto loadPipeline05_VSTask = DX::ReadDataAsync(L"P05_VS.cso");
 	auto loadPipeline05_GSTask = DX::ReadDataAsync(L"P05_GS.cso");
 	auto loadPipeline05_PSTask = DX::ReadDataAsync(L"P05_PS.cso");
@@ -267,38 +287,7 @@ void P05_Explicit::CreateDeviceDependentResources()
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline05_PSTask && createPipeline05_GSTask && createPipeline05_VSTask).then([this]() {
 
-		// Rasterization
-		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-		rasterizerDesc.ScissorEnable = false;
-		rasterizerDesc.DepthBias = 0;
-		rasterizerDesc.DepthBiasClamp = 0.0f;
-		rasterizerDesc.DepthClipEnable = false;
-		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-
-		auto device = m_deviceResources->GetD3DDevice();
-
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_noCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_BACK;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_backCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_FRONT;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_frontCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_wireframeRasterizerState.GetAddressOf());
-
 		// M x N 2D Grid
-
 		int m = 10;
 		int n = 10;
 		float w = 10.0f;
@@ -307,7 +296,6 @@ void P05_Explicit::CreateDeviceDependentResources()
 		float halfDepth = 0.5f * d;
 		float dx = w / (n - 1);
 		float dz = d / (m - 1);
-
 		constexpr float FLOAT_MIN = -10.0f;
 		constexpr float FLOAT_MAX = 10.0f;
 
@@ -324,7 +312,6 @@ void P05_Explicit::CreateDeviceDependentResources()
 				gridVertices[i * n + j].color = XMFLOAT3(1.0f, 1.0f, 1.0f);
 			}
 		};
-
 
 		// Create index buffer for m x n grid
 		WORD gridIndices[486] = {};
@@ -343,7 +330,6 @@ void P05_Explicit::CreateDeviceDependentResources()
 				k += 6;
 			}
 		}
-
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
 		vertexBufferData.pSysMem = gridVertices;

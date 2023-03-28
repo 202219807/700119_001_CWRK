@@ -65,10 +65,152 @@ void P03_Explicit::CreateWindowSizeDependentResources()
 	XMStoreFloat4(&m_constantBufferData.eye, eye);
 }
 
+// Called once per frame, rotates the cube and calculates the model and view matrices.
+void P03_Explicit::Update(DX::StepTimer const& timer)
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
+	XMStoreFloat4(&m_constantBufferData.time, time);
+
+
+	D3D11_VIEWPORT viewport;
+	UINT numViewports = 1;
+	context->RSGetViewports(&numViewports, &viewport);
+
+	int viewportWidth = m_deviceResources->GetOutputSize().Width;
+	int viewportHeight = m_deviceResources->GetOutputSize().Height;
+	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
+	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+}
+
+// Renders one frame using the vertex and pixel shaders.
+void P03_Explicit::Render()
+{
+	// Loading is asynchronous. Only draw geometry after it's loaded.
+	if (!m_loadingComplete)
+	{
+		return;
+	}
+
+	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData,
+		0,
+		0,
+		0
+	);
+
+	// Each vertex is one instance of the VertexPositionColor struct.
+	UINT stride = sizeof(VertexPositionColor);
+	UINT offset = 0;
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Attach our hull shader.
+	context->HSSetShader(
+		m_hullShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Attach our domain shader.
+	context->DSSetShader(
+		m_domainShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->DSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Detach our geometry shader.
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Rasterization
+	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+
+	auto device = m_deviceResources->GetD3DDevice();
+
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+	device->CreateRasterizerState(&rasterizerDesc,
+		m_rasterizerState.GetAddressOf());
+
+	// Send the constant buffer to the graphics device.
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Draw the object.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
+}
+
 void P03_Explicit::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-
 	auto loadPipeline03_VSTask = DX::ReadDataAsync(L"P03_VS.cso");
 	auto loadPipeline03_HSTask = DX::ReadDataAsync(L"P03_HS.cso");
 	auto loadPipeline03_DSTask = DX::ReadDataAsync(L"P03_DS.cso");
@@ -110,15 +252,6 @@ void P03_Explicit::CreateDeviceDependentResources()
 				fileData.size(),
 				nullptr,
 				&m_hullShader
-			)
-		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
 			)
 		);
 		});
@@ -166,38 +299,7 @@ void P03_Explicit::CreateDeviceDependentResources()
 		});
 
 	// Once both shaders are loaded, create the mesh.
-	auto execPipelines = (createPipeline03_PSTask && createPipeline03_DSTask && createPipeline03_HSTask  && createPipeline03_VSTask).then([this]() {
-
-		// Rasterization
-		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-		rasterizerDesc.ScissorEnable = false;
-		rasterizerDesc.DepthBias = 0;
-		rasterizerDesc.DepthBiasClamp = 0.0f;
-		rasterizerDesc.DepthClipEnable = false;
-		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-
-		auto device = m_deviceResources->GetD3DDevice();
-
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_noCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_BACK;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_backCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_FRONT;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_frontCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_wireframeRasterizerState.GetAddressOf());
-
+	auto execPipelines = (createPipeline03_PSTask && createPipeline03_DSTask && createPipeline03_HSTask && createPipeline03_VSTask).then([this]() {
 		// Cube
 
 		// Load mesh vertices. Each vertex has a position and a color.
@@ -285,141 +387,4 @@ void P03_Explicit::ReleaseDeviceDependentResources()
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
-}
-
-// Called once per frame, rotates the cube and calculates the model and view matrices.
-void P03_Explicit::Update(DX::StepTimer const& timer)
-{
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.time, time);
-
-
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	int viewportWidth = m_deviceResources->GetOutputSize().Width;
-	int viewportHeight = m_deviceResources->GetOutputSize().Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
-}
-
-// Renders one frame using the vertex and pixel shaders.
-void P03_Explicit::Render()
-{
-	// Loading is asynchronous. Only draw geometry after it's loaded.
-	if (!m_loadingComplete)
-	{
-		return;
-	}
-
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	context->RSSetState(m_wireframeRasterizerState.Get());
-
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
-	);
-
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
-
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-	);
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Attach our hull shader.
-	context->HSSetShader(
-		m_hullShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->HSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Attach our domain shader.
-	context->DSSetShader(
-		m_domainShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->DSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Draw the object.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-	);
 }

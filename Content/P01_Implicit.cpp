@@ -95,8 +95,6 @@ void P01_Implicit::Render()
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	context->RSSetState(m_frontCullRasterizerState.Get());
-
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
@@ -146,6 +144,40 @@ void P01_Implicit::Render()
 		nullptr
 	);
 
+	// detach our hull shader.
+	context->HSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// detach our domain shader.
+	context->DSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// detach our geometry shader.
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// Rasterization
+	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+
+	auto device = m_deviceResources->GetD3DDevice();
+
+	rasterizerDesc.CullMode = D3D11_CULL_FRONT;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	device->CreateRasterizerState(&rasterizerDesc,
+		m_rasterizerState.GetAddressOf());
+
+	context->RSSetState(m_rasterizerState.Get());
+
+
 	// Attach our pixel shader.
 	context->PSSetShader(
 		m_pixelShader.Get(),
@@ -173,7 +205,6 @@ void P01_Implicit::Render()
 void P01_Implicit::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-
 	auto loadPipeline01_VSTask = DX::ReadDataAsync(L"P01_VS.cso");
 	auto loadPipeline01_PSTask = DX::ReadDataAsync(L"P01_PS.cso");
 
@@ -228,36 +259,6 @@ void P01_Implicit::CreateDeviceDependentResources()
 
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline01_PSTask && createPipeline01_VSTask).then([this]() {
-
-		// Rasterization
-		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-		rasterizerDesc.ScissorEnable = false;
-		rasterizerDesc.DepthBias = 0;
-		rasterizerDesc.DepthBiasClamp = 0.0f;
-		rasterizerDesc.DepthClipEnable = false;
-		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-
-		auto device = m_deviceResources->GetD3DDevice();
-
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_noCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_BACK;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_backCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_FRONT;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_frontCullRasterizerState.GetAddressOf());
-
-		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-		device->CreateRasterizerState(&rasterizerDesc,
-			m_wireframeRasterizerState.GetAddressOf());
 
 		// Cube
 
