@@ -170,7 +170,7 @@ void P01_Implicit::Render()
 
 	auto device = m_deviceResources->GetD3DDevice();
 
-	rasterizerDesc.CullMode = D3D11_CULL_FRONT;
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());

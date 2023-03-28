@@ -32,8 +32,6 @@ VertexShaderOutput main(
 	uint i : SV_OutputControlPointID)
 {
 	VertexShaderOutput Output;
-
 	Output.pos = patch[i].pos;
-
 	return Output;
 }

@@ -3,8 +3,8 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix model;
 	matrix view;
 	matrix projection;
-	float4 resolution;
 	float4 timer;
+	float4 resolution;
 	float4 eye;
 };
 
@@ -76,9 +76,9 @@ VertexShaderOutput main(QuadTessParam input,
 
 	output.pos = float4(spherePos, 1);
 	output.pos.xyz += noise(spherePos) * (spherePos / radius);
-	output.pos.x -= 1.0;
-	output.pos.y -= 0.5;
-	output.pos.xz *= noise(output.pos.xyz) * sin(timer.x);
+	output.pos.x -= 0.8;
+	output.pos.y -= 1.0;
+	output.pos.yz *= noise(output.pos.xyz) * 2.5;
 	
 	return output;
 

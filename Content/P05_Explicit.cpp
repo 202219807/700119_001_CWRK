@@ -183,20 +183,13 @@ void P05_Explicit::Render()
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
 
+	context->RSSetState(m_rasterizerState.Get());
+
 	// Attach our pixel shader.
 	context->PSSetShader(
 		m_pixelShader.Get(),
 		nullptr,
 		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
 	);
 
 	// Draw the object.
@@ -273,15 +266,6 @@ void P05_Explicit::CreateDeviceDependentResources()
 				&m_pixelShader
 			)
 		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
-			)
-		);
 		});
 
 	// Once both shaders are loaded, create the mesh.
@@ -319,7 +303,6 @@ void P05_Explicit::CreateDeviceDependentResources()
 
 		for (int i = 0; i < m - 1; ++i) {
 			for (int j = 0; j < n - 1; ++j) {
-
 				gridIndices[k] = i * n + j;
 				gridIndices[k + 1] = i * n + (j + 1);
 				gridIndices[k + 2] = (i + 1) * n + j;

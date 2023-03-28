@@ -28,8 +28,6 @@ void main(point GeometryShaderInput input[1], inout
 	PixelShaderInput output = (PixelShaderInput)0;
 
 	float4 vPos = input[0].pos;
-	vPos = mul(vPos, model);
-	vPos = mul(vPos, view);
 
 	static const float3 g_positions[4] =
 	{
@@ -44,7 +42,7 @@ void main(point GeometryShaderInput input[1], inout
 	float quadSize = 0.15;
 
 	// vertex 1:  
-	output.pos = vPos + float4(quadSize * g_positions[0], 0.0);
+	output.pos = vPos + float4(quadSize * g_positions[1], 0.0);
 	output.pos = mul(output.pos, projection);
 
 	output.color = input[0].color;
@@ -53,7 +51,7 @@ void main(point GeometryShaderInput input[1], inout
 	OutputStream.Append(output);
 
 	// vertex 2:  
-	output.pos = vPos + float4(quadSize * g_positions[1], 0.0);
+	output.pos = vPos + float4(quadSize * g_positions[0], 0.0);
 	output.pos = mul(output.pos, projection);
 
 	output.color = input[0].color;
@@ -77,15 +75,6 @@ void main(point GeometryShaderInput input[1], inout
 	quadSize = 0.1;
 
 	// vertex 1:  
-	output.pos = vPos + float4(quadSize * g_positions[1], 0.0);
-	output.pos = mul(output.pos, projection);
-
-	output.color = input[0].color;
-	output.uv = (sign(input[0].pos.xy) + 1.0) / 2.0;
-
-	OutputStream.Append(output);
-
-	// vertex 2:  
 	output.pos = vPos + float4(quadSize * g_positions[2], 0.0);
 	output.pos = mul(output.pos, projection);
 
@@ -94,8 +83,17 @@ void main(point GeometryShaderInput input[1], inout
 
 	OutputStream.Append(output);
 
-	// vertex 3:  
+	// vertex 2:  
 	output.pos = vPos + float4(quadSize * g_positions[3], 0.0);
+	output.pos = mul(output.pos, projection);
+
+	output.color = input[0].color;
+	output.uv = (sign(input[0].pos.xy) + 1.0) / 2.0;
+
+	OutputStream.Append(output);
+
+	// vertex 3:  
+	output.pos = vPos + float4(quadSize * g_positions[1], 0.0);
 	output.pos = mul(output.pos, projection);
 
 	output.color = input[0].color;

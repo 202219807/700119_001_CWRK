@@ -174,13 +174,6 @@ void P03_Explicit::Render()
 		0
 	);
 
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-	);
-
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 
@@ -190,6 +183,15 @@ void P03_Explicit::Render()
 	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
+
+	context->RSSetState(m_rasterizerState.Get());
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
 
 	// Send the constant buffer to the graphics device.
 	context->PSSetConstantBuffers1(

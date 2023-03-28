@@ -28,7 +28,7 @@ PixelShaderInput main(VertexShaderInput input)
     
     // Transformations
     inPos.xyz *= 100.0; // 10.0
-    inPos.z += 10.0;
+    inPos.z += 25.0;
     //inPos.x += 1.0;
     
     // inPos = float4(sign(inPos.xy), 0, 1);
@@ -40,7 +40,7 @@ PixelShaderInput main(VertexShaderInput input)
     output.pos = inPos;
     
     float aspectRatio = projection._m11 / projection._m00;
-    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.0); // 1.0
+    output.canvasXY = sign(output.pos.xy) * float2(aspectRatio, 1.8); // 1.0
 
     return output;
 }

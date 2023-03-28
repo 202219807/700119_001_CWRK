@@ -5,6 +5,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix projection;
 	float4 timer;
 	float4 resolution;
+	float4 eye;
 };
 
 struct VertexShaderInput

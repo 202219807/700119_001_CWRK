@@ -50,9 +50,9 @@ GeometryShaderInput main(VertexShaderInput input)
     float4 inPos = float4(input.pos, 1.0);
 
     // Transformations
-    inPos.xyz *= 2.0;
+    inPos.xyz *= 0.5;
 
-    inPos.z -= 10.0;
+    inPos.z -= 15.0;
     inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
 
     // Create the rotation matrix
@@ -67,11 +67,7 @@ GeometryShaderInput main(VertexShaderInput input)
 
     inPos = mul(inPos, rotationMatrix);
 
-    inPos = mul(inPos, model);
-    inPos = mul(inPos, view);
-    inPos = mul(inPos, projection);
     output.pos = inPos;
-
     output.color = GradientShade(output.pos);
 
     return output;
