@@ -1,11 +1,11 @@
-struct VertexShaderOutput
+struct VS_OUTPUT
 {
-	float4 pos : SV_POSITION;
+	float4 pos		: SV_POSITION;
 };
 
-VertexShaderOutput main()
+VS_OUTPUT main()
 {
-	VertexShaderOutput output;
-	output.pos = float4(0.0,0.0,0.0,1.0);
+	VS_OUTPUT output;
+	output.pos = float4(0.0, 0.0, 0.0, 1.0);
 	return output;
 }

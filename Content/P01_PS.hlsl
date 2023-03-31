@@ -1,3 +1,5 @@
+#include "Utilities.hlsli"
+
 /* Preprocessor directives for porting GLSL code to HLSL */
 #define vec2 float2 
 #define vec3 float3 
@@ -14,7 +16,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix model;
     matrix view;
     matrix projection;
-    float4 timer;
+    float4 elapsedTime;
     float4 resolution;
     float4 eye;
 };
@@ -22,14 +24,14 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 /**
  * TODO: Specify the following basic elements involved 
  * in 3D rendering (relating to camera and lighting) in 
- * your applicationand pass them to pixel shaders as 
+ * the application and pass them to pixel shaders as 
  * shader constants by means of constant buffer. 
  */
 static const int    MAX_MARCHING_STEPS = 200;
 static const float  MIN_DIST           = 0.0;
 static const float  MAX_DIST           = 100.0;
 static const float  EPSILON            = 0.0001;
-static const float  TIME               = timer.x;
+static const float  TIME               = elapsedTime.x;
 
 struct PixelShaderInput
 {
@@ -42,43 +44,6 @@ struct Ray
     float3 o; // origin 
     float3 d; // direction 
 };
-
-/** 
-* Mathematics utilities:
-* Noise functions, Transformations and Soft blending
-*/
-
-/**
-* Noise function sampled from:
-* https://www.shadertoy.com/view/WdByRR 
-*/
-float hash(float n)
-{
-    return frac(sin(n) * 43758.5453);
-}
-
-float noise(in float3 x)
-{
-    vec3 p = floor(x);
-    vec3 k = frac(x);
-    k = k * k * (3.0 - 2.0 * k);
-	
-    float n = p.x + p.y * 57.0 + p.z * 113.0;
-    float a = hash(n);
-    float b = hash(n + 1.0);
-    float c = hash(n + 57.0);
-    float d = hash(n + 58.0);
-
-    float e = hash(n + 113.0);
-    float f = hash(n + 114.0);
-    float g = hash(n + 170.0);
-    float h = hash(n + 171.0);
-	
-    float res = lerp(lerp(lerp(a, b, k.x), lerp(c, d, k.x), k.y),
-                    lerp(lerp(e, f, k.x), lerp(g, h, k.x), k.y),
-                k.z);
-    return res;
-}
 
 /* Rotation */ 
 float2x2 rot(float a)

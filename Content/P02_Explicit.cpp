@@ -124,7 +124,7 @@ void P02_Explicit::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ);
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -182,15 +182,6 @@ void P02_Explicit::Render()
 		m_pixelShader.Get(),
 		nullptr,
 		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
 	);
 
 	// Draw the object.

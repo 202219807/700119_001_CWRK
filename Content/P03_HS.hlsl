@@ -1,4 +1,11 @@
-struct VertexShaderOutput
+#define Control_Points 4
+
+struct HS_INPUT
+{
+	float4 pos		: SV_POSITION;
+};
+
+struct HS_OUTPUT
 {
 	float4 pos		: SV_POSITION;
 };
@@ -9,10 +16,8 @@ struct QuadTessFactors
 	float Inside[2]	: SV_InsideTessFactor;
 };
 
-#define CP 4
-
 QuadTessFactors CalcHSPatchConstants(
-	InputPatch<VertexShaderOutput, CP> ip,
+	InputPatch<HS_INPUT, Control_Points> ip,
 	uint PatchID : SV_PrimitiveID)
 {
 	QuadTessFactors Output;
@@ -24,14 +29,14 @@ QuadTessFactors CalcHSPatchConstants(
 
 [domain("quad")]
 [partitioning("fractional_odd")]
-[outputtopology("triangle_cw")]
+[outputtopology("triangle_ccw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("CalcHSPatchConstants")]
-VertexShaderOutput main(
-	InputPatch<VertexShaderOutput, CP> patch,
+HS_OUTPUT main(
+	InputPatch<HS_INPUT, Control_Points> patch,
 	uint i : SV_OutputControlPointID)
 {
-	VertexShaderOutput Output;
+	HS_OUTPUT Output;
 	Output.pos = patch[i].pos;
 	return Output;
 }

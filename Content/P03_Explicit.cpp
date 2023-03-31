@@ -135,15 +135,6 @@ void P03_Explicit::Render()
 		0
 	);
 
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
 	// Attach our hull shader.
 	context->HSSetShader(
 		m_hullShader.Get(),
@@ -191,15 +182,6 @@ void P03_Explicit::Render()
 		m_pixelShader.Get(),
 		nullptr,
 		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
 	);
 
 	// Draw the object.
@@ -289,20 +271,12 @@ void P03_Explicit::CreateDeviceDependentResources()
 				&m_pixelShader
 			)
 		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
-			)
-		);
 		});
 
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline03_PSTask && createPipeline03_DSTask && createPipeline03_HSTask && createPipeline03_VSTask).then([this]() {
-		// Cube
+		
+		// Cube geometry
 
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor cubeVertices[] =

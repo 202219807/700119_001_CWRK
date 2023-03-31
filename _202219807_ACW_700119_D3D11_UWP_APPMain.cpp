@@ -15,7 +15,7 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::_202219807_ACW_700119_D3D11_UWP_APPMain
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	// m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
 	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
 	m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
 	m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
@@ -40,7 +40,7 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::~_202219807_ACW_700119_D3D11_UWP_APPMai
 void _202219807_ACW_700119_D3D11_UWP_APPMain::CreateWindowSizeDependentResources() 
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
-	m_p01_Implicit->CreateWindowSizeDependentResources();
+	// m_p01_Implicit->CreateWindowSizeDependentResources();
 	m_p02_Explicit->CreateWindowSizeDependentResources();
 	m_p03_Explicit->CreateWindowSizeDependentResources();
 	m_p05_Explicit->CreateWindowSizeDependentResources();
@@ -53,7 +53,7 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::Update()
 	m_timer.Tick([&]()
 	{
 		// TODO: Replace this with your app's content update functions.
-		m_p01_Implicit->Update(m_timer);
+		// m_p01_Implicit->Update(m_timer);
 		m_p02_Explicit->Update(m_timer);
 		m_p03_Explicit->Update(m_timer);
 		m_p05_Explicit->Update(m_timer);
@@ -87,7 +87,7 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
-	m_p01_Implicit->Render();
+	// m_p01_Implicit->Render();
 	m_p02_Explicit->Render();
 	m_p03_Explicit->Render();
 	m_p05_Explicit->Render();
@@ -99,7 +99,7 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 // Notifies renderers that device resources need to be released.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
-	m_p01_Implicit->ReleaseDeviceDependentResources();
+	// m_p01_Implicit->ReleaseDeviceDependentResources();
 	m_p02_Explicit->ReleaseDeviceDependentResources();
 	m_p03_Explicit->ReleaseDeviceDependentResources();
 	m_p05_Explicit->ReleaseDeviceDependentResources();
@@ -109,7 +109,7 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 // Notifies renderers that device resources may now be recreated.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
-	m_p01_Implicit->CreateDeviceDependentResources();
+	// m_p01_Implicit->CreateDeviceDependentResources();
 	m_p02_Explicit->CreateDeviceDependentResources();
 	m_p03_Explicit->CreateDeviceDependentResources();
 	m_p05_Explicit->CreateDeviceDependentResources();

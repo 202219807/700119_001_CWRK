@@ -134,4 +134,9 @@
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Content\Utilities.hlsli">
+      <Filter>Content</Filter>
+    </None>
+  </ItemGroup>
 </Project>
