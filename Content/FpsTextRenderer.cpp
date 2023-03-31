@@ -58,7 +58,7 @@ void FpsTextRenderer::Update(DX::StepTimer const& timer)
 			(uint32) m_text.length(),
 			m_textFormat.Get(),
 			240.0f, // Max width of the input text.
-			50.0f, // Max height of the input text.
+			50.0f,  // Max height of the input text.
 			&textLayout
 			)
 		);
@@ -83,8 +83,8 @@ void FpsTextRenderer::Render()
 
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
-		logicalSize.Width - m_textMetrics.layoutWidth,
-		logicalSize.Height - m_textMetrics.height
+		logicalSize.Width - m_textMetrics.layoutWidth - 10.0f,
+		 m_textMetrics.height - 25.0f
 		);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
