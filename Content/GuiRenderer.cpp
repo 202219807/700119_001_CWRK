@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#include "FpsTextRenderer.h"
+#include "GuiRenderer.h"
 
 #include "Common/DirectXHelper.h"
 
@@ -7,7 +7,7 @@ using namespace _202219807_ACW_700119_D3D11_UWP_APP;
 using namespace Microsoft::WRL;
 
 // Initializes D2D resources used for text rendering.
-FpsTextRenderer::FpsTextRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) : 
+GuiRenderer::GuiRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_text(L""),
 	m_deviceResources(deviceResources)
 {
@@ -44,7 +44,7 @@ FpsTextRenderer::FpsTextRenderer(const std::shared_ptr<DX::DeviceResources>& dev
 }
 
 // Updates the text to be displayed.
-void FpsTextRenderer::Update(DX::StepTimer const& timer)
+void GuiRenderer::Update(DX::StepTimer const& timer)
 {
 	// Update display text.
 	uint32 fps = timer.GetFramesPerSecond();
@@ -57,7 +57,7 @@ void FpsTextRenderer::Update(DX::StepTimer const& timer)
 			m_text.c_str(),
 			(uint32) m_text.length(),
 			m_textFormat.Get(),
-			240.0f, // Max width of the input text.
+			650.0f, // Max width of the input text.
 			50.0f,  // Max height of the input text.
 			&textLayout
 			)
@@ -73,7 +73,7 @@ void FpsTextRenderer::Update(DX::StepTimer const& timer)
 }
 
 // Renders a frame to the screen.
-void FpsTextRenderer::Render()
+void GuiRenderer::Render()
 {
 	ID2D1DeviceContext* context = m_deviceResources->GetD2DDeviceContext();
 	Windows::Foundation::Size logicalSize = m_deviceResources->GetLogicalSize();
@@ -84,7 +84,7 @@ void FpsTextRenderer::Render()
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
 		logicalSize.Width - m_textMetrics.layoutWidth - 10.0f,
-		 m_textMetrics.height - 25.0f
+		 m_textMetrics.height - 45.0f
 		);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
@@ -110,13 +110,14 @@ void FpsTextRenderer::Render()
 	context->RestoreDrawingState(m_stateBlock.Get());
 }
 
-void FpsTextRenderer::CreateDeviceDependentResources()
+void GuiRenderer::CreateDeviceDependentResources()
 {
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 		);
 }
-void FpsTextRenderer::ReleaseDeviceDependentResources()
+
+void GuiRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteBrush.Reset();
 }

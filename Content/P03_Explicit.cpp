@@ -62,7 +62,7 @@ void P03_Explicit::CreateWindowSizeDependentResources()
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-	XMStoreFloat4(&m_constantBufferData.eye, eye);
+	//XMStoreFloat4(&m_constantBufferData.eye, eye);
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
@@ -71,7 +71,7 @@ void P03_Explicit::Update(DX::StepTimer const& timer)
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
 	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.time, time);
+	//XMStoreFloat4(&m_constantBufferData.time, time);
 
 
 	D3D11_VIEWPORT viewport;
@@ -81,7 +81,7 @@ void P03_Explicit::Update(DX::StepTimer const& timer)
 	int viewportWidth = m_deviceResources->GetOutputSize().Width;
 	int viewportHeight = m_deviceResources->GetOutputSize().Height;
 	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -171,7 +171,7 @@ void P03_Explicit::Render()
 	auto device = m_deviceResources->GetD3DDevice();
 
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
 

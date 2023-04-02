@@ -8,9 +8,25 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		DirectX::XMFLOAT4X4 model;
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
-		DirectX::XMFLOAT4   time;
-		DirectX::XMFLOAT4   resolution;
-		DirectX::XMFLOAT4   eye;
+	};
+
+	struct CameraPositionConstantBuffer
+	{
+		DirectX::XMFLOAT3 position;
+		float padding;
+	};
+
+	struct ElapsedTimeConstantBuffer
+	{
+		float time;
+		DirectX::XMFLOAT3 padding;
+	};
+
+	struct ResolutionConstantBuffer
+	{
+		float resolutionY;
+		float resolutionX;
+		DirectX::XMFLOAT2 padding;
 	};
 
 	// Used to send per-vertex data to the vertex shader.

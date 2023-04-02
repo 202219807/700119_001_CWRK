@@ -8,8 +8,9 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 {
 	// Graphic Pipeline 03:
 	// 
-	// Underwater coral object generated using 
-	// tessellation and parametric surface designing
+	// Underwater coral objects generated using 
+	// parametric surface designing and
+	// tessellation with SM5 hull and domain shaders.
 
 	class P03_Explicit
 	{

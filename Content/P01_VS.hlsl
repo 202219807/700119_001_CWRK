@@ -3,37 +3,36 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix model;
     matrix view;
     matrix projection;
-    float4 timer;
-    float4 resolution;
-    float4 eye;
 };
 
-struct VertexShaderInput
+struct VS_INPUT
 {
     float3 pos      : POSITION;
     float3 color    : COLOR0;
 };
 
-struct PixelShaderInput
+struct VS_OUTPUT
 {
     float4 pos      : SV_POSITION;
     float2 canvasXY : TEXCOORD0;
 };
 
-PixelShaderInput main(VertexShaderInput input)
+VS_OUTPUT main(VS_INPUT input)
 {
-    PixelShaderInput output;
+    VS_OUTPUT output;
     
     float4 inPos = float4(input.pos, 1.0);
     
     // Transformations
     inPos.xyz *= 100.0; // 10.0
     inPos.z += 25.0;
-    //inPos.x += 1.0;
     
     // inPos = float4(sign(inPos.xy), 0, 1);
-    //inPos = mul(float4(10 * inPos.xy, inPos.zw), model);
-    //inPos = mul(inPos, model);
+    //
+    // or
+    //
+    // inPos = mul(float4(10 * inPos.xy, inPos.zw), model);
+    // inPos = mul(inPos, model);
 
     inPos = mul(inPos, view);
     inPos = mul(inPos, projection);
@@ -44,10 +43,3 @@ PixelShaderInput main(VertexShaderInput input)
 
     return output;
 }
-
-
-
-
-
-
-

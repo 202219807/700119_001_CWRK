@@ -62,7 +62,7 @@ void P05_Explicit::CreateWindowSizeDependentResources()
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-	XMStoreFloat4(&m_constantBufferData.eye, eye);
+	//XMStoreFloat4(&m_constantBufferData.eye, eye);
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
@@ -71,7 +71,7 @@ void P05_Explicit::Update(DX::StepTimer const& timer)
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
 	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.time, time);
+	//XMStoreFloat4(&m_constantBufferData.time, time);
 
 	D3D11_VIEWPORT viewport;
 	UINT numViewports = 1;
@@ -80,7 +80,7 @@ void P05_Explicit::Update(DX::StepTimer const& timer)
 	int viewportWidth = m_deviceResources->GetOutputSize().Width;
 	int viewportHeight = m_deviceResources->GetOutputSize().Height;
 	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
 }
 
 // Renders one frame using the vertex and pixel shaders.
