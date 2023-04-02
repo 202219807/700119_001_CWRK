@@ -85,16 +85,27 @@ float FloorSDF(float3 p)
 }
 
 /** 
- * Signed distance functions for implicitly modeling a bubble
- * Animation based on https://www.shadertoy.com/view/WtfyWj
- **/ 
+ * Signed distance functions for implicitly modeling a wobbly bubble
+ */ 
 float BubbleSDF(float3 p, float t)
 {
-    float progress = pow(min(frac(t * 0.1) * 4.5, 1.0), 2.0);
+    /* Animation based on 
+    https://www.shadertoy.com/view/WtfyWj */
+    
     float maxDepth = 4.2;
+    float progress = pow(min(frac(t * 0.01) * 4.5, 1.0), 2.0);
     float depth = maxDepth * (0.8 - progress * progress);
-    float r = lerp(0.01, 0.08, progress);
+    
+    float r = lerp(0.01, 0.09, progress);
     float d = 2.0 - smoothstep(0.0, 1.0, min(progress * 5.0, 1.0)) * 0.3;
+    
+    // Apply noise function to make the bubble wobbly
+    float3 offset = float3(0.0, 0.0, 0.0);
+    offset.x = noise(p * 0.8 + float3(t * 0.5, 0.0, 0.0)) * 0.2;
+    offset.y = noise(p * 0.6 + float3(0.0, t * 0.5, 0.0)) * 0.2;
+    offset.z = noise(p * 0.7 + float3(0.0, 0.0, t * 0.5)) * 0.2;
+    p += offset;
+    
     return length(p + float3(d, depth, -1.0 + 0.2 * progress * sin(progress * 10.0))) - r;
 }
 
@@ -182,13 +193,13 @@ float2 SceneSDF(float3 p)
     d += (0.5 + 0.5 * (sin(p.z * 0.2 + t) + sin((p.z + p.x) * 0.1 + t * 2.0))) * 0.4;
     
     return min(float2(d, 1.5),
-           min(float2(FloorSDF(p), 3.5),
+           min(float2(FloorSDF (p), 3.5),
            min(float2(PlantsSDF(p - float3(0.0, 0.0, 0.0)), 5.5),
-           min(float2(CoralSDF(p - float3(-3.0, -2.4, -2.8)), 7.5),
+           min(float2(CoralSDF (p - float3(-3.0, -2.4, -2.8)), 7.5),
            min(float2(PlantsSDF(p - float3(-2.5, 0.0, -1.3)), 8.5),
-           min(float2(CoralSDF(p - float3(-3.0, -3.0, 0.0)), 6.5),
+           min(float2(CoralSDF (p - float3(-3.0, -3.0, 0.0)), 6.5),
            min(float2(BubbleSDF(pp, time - 0.8), 4.5),
-               float2(BubbleSDF(pp, time), 2.5))))))));
+               float2(BubbleSDF(pp, time), 4.5))))))));
 }
 
 /**
@@ -196,7 +207,9 @@ float2 SceneSDF(float3 p)
  * Caustics, God Rays and Ambient Occlusion
  * 
  * Caustics based on https://www.shadertoy.com/view/WdByRR 
- * God rays and Ambient Ccclusion based on https://www.shadertoy.com/view/WtfyWj
+ * 
+ * God rays and Ambient Occlusion 
+ * based on https://www.shadertoy.com/view/WtfyWj
  */
 float Caustics(float3 p)
 {
@@ -298,15 +311,13 @@ float3 Shading(HitObject hObj, float3 n, float3 p, float3 l)
                 // Sand
             texColor += float3(0.1, 0.1, 0.0);
         }
-        else if (hObj.id == 6)
+        else if (hObj.id == 6) // Coral
         {
-                // Coral            
-            texColor += float3(1.12, 0.25, .15) * 0.5;
-        }
-        else if (hObj.id == 7)
-        {
-                // Coral     
             texColor += float3(1.32, 0.35, .15);
+        }
+        else if (hObj.id == 7) // Coral  
+        {
+            texColor += float3(1.12, 0.25, .15) * 0.5;
         }
         else if (hObj.id == 5)
         {
@@ -416,8 +427,8 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
         
         // Lighting
         float shininess = 10.0;
-        float3 K_a = float3(0.1, 0.1, 0.1);
-        float3 K_d = float3(0.1, 0.5, 0.1);
+        float3 K_a = float3(0.2, 0.2, 0.2);
+        float3 K_d = float3(0.2, 0.2, 0.2);
         float3 K_s = float3(1.0, 1.0, 1.0);
         pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, ray.d) + texColor;
     }
