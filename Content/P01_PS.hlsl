@@ -146,32 +146,32 @@ float PlantsSDF(float3 p)
  * Signed distance functions for implicitly modeling a coral object 
  * Based on https://www.shadertoy.com/view/XsfGR8
  **/
-float CoralSDF(float3 r)
+float CoralSDF(float3 p)
 {
-    float3 zn = float3(r.xyz);
-    float rad = 0.0;
+    float3 zn = float3(p.xyz);
+    float radius = 0.0;
     float hit = 0.0;
-    float p = 9; //12
+    float n = 9; //12
     float d = 2.0;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 12; i++)
     {
-        rad = sqrt(dot(zn, zn));
-        if (rad > 2.0)
+        radius = sqrt(dot(zn, zn));
+        if (radius > 2.0)
         {
-            hit = 0.5 * log(rad) * rad / d;
+            hit = 0.5 * log(radius) * radius / d;
         }
         else
         {
-            float th = atan2(sqrt(dot(zn.xy, zn.xy)), zn.z);
+            float rado = pow(radius, 8.0);
+            float theta = atan2(length(zn.xy), zn.z);
             float phi = atan2(zn.y, zn.x);
-            float rado = pow(rad, 8.0);
-            d = pow(rad, 7.0) * 7.0 * d + 1.0;
+            d = pow(radius, 7.0) * 7.0 * d + 1.0;
 
-            float sint = sin(th * p);
-            zn.x = rado * sint * cos(phi * p);
-            zn.y = rado * sint * sin(phi * p);
-            zn.z = rado * cos(th * p);
-            zn += r;
+            float sint = sin(theta * n);
+            zn.x = rado * sint * cos(phi * n);
+            zn.y = rado * sint * sin(phi * n);
+            zn.z = rado * cos(theta * n);
+            zn += p;
         }
     }
     return hit;
@@ -197,7 +197,7 @@ float2 SceneSDF(float3 p)
            min(float2(FloorSDF (p), 3.5),
            min(float2(PlantsSDF(p - float3(0.0, 0.0, 0.0)), 5.5),
            min(float2(PlantsSDF(p - float3(1.0, 0.0, -0.5)), 5.5),
-           min(float2(CoralSDF(p - float3(-3.0, -2.4, 0.0)), 7.5),
+           min(float2(CoralSDF(p - float3(-4.0, -2.4, 1.0)), 7.5),
            min(float2(PlantsSDF(p - float3(-2.5, 0.0, -1.3)), 8.5),
            min(float2(CoralSDF(p - float3(-2.0, -2.8, -2.8)), 6.5),
            min(float2(BubbleSDF(pp, time - 0.8), 4.5),
@@ -223,7 +223,7 @@ float GodRays(float3 p, float3 lightPos)
     float3 lightDir = normalize(lightPos - p);
     float3 sp = p + lightDir * -p.y;
     float f = 1.0 - clamp(SurfaceSDF(sp.xz) * 10.0, 0.0, 1.0);
-    f *= 1.0 - sqrt(dot(lightDir.xz, lightDir.xz));
+    f *= 1.0 - length(lightDir.xz);
     return smoothstep(0.2, 1.0, f * 0.7);
 }
 
@@ -301,16 +301,14 @@ float3 Shading(HitObject hObj, float3 n, float3 p, float3 l)
 {
     float3 texColor = float3(0.15, 0.25, 0.6);
 
-    if (hObj.id == 1)
+    if (hObj.id == 1) // Sea
     {
-            // Sea
         n.y = -n.y;
     }
     else
     {
-        if (hObj.id == 3)
+        if (hObj.id == 3)  // Sand
         {
-                // Sand
             texColor += float3(0.1, 0.1, 0.0);
         }
         else if (hObj.id == 6) // Coral back
@@ -321,14 +319,12 @@ float3 Shading(HitObject hObj, float3 n, float3 p, float3 l)
         {
             texColor += float3(1.32, 0.35, .15);
         }
-        else if (hObj.id == 5)
+        else if (hObj.id == 5) // Plant
         {
-                // Plant
             texColor += float3(0.0, 0.2, 0.0);
         }
-        else if (hObj.id == 8)
+        else if (hObj.id == 8) // Plant
         {
-                // Plant
             texColor += float3(0.0, 0.2, 0.0);
         }
             
@@ -417,8 +413,8 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
 {
     HitObject hObj = RayMarching(ray, MIN_DIST, MAX_DIST);
     float3 lightPos = float3(-1.0, 10.0, 1.0);
-    // float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
-    float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
+    float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
+    //float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
     float3 pixelColor = deepColor;
     
     float3 p = ray.o + hObj.d * ray.d;
@@ -432,11 +428,11 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
         float3 K_a = float3(0.2, 0.2, 0.2);
         float3 K_d = float3(0.2, 0.2, 0.2);
         float3 K_s = float3(1.0, 1.0, 1.0);
-        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, ray.d) + texColor;
+        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor;
     }
     
     // Post processing
-    float scale = 0.9; // For aqua shade 0.9; // For deep shade 2.0;
+    float scale = 3.0; // For aqua shade 0.9; // For deep shade 2.0;
     
     // Fog
     float fog = clamp(pow(hObj.d / MAX_DIST * scale, 1.5), 0.0, 1.0);
