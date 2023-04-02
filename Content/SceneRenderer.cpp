@@ -26,7 +26,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 			DWRITE_FONT_WEIGHT_MEDIUM,
 			DWRITE_FONT_STYLE_NORMAL,
 			DWRITE_FONT_STRETCH_NORMAL,
-			28.0f,
+			21.0f,
 			L"en-US",
 			&textFormat
 		)
@@ -48,9 +48,10 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 	m_camera->SetPosition(0.0f, -2.5f, -15.5f);
 	m_camera->SetRotation(0.0f, 0.0f, 0.0f);
 
-	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	//m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
 	//m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
 	//m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
+	m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
 	//m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
 
 	DX::ThrowIfFailed(
@@ -67,10 +68,10 @@ void SceneRenderer::CreateDeviceDependentResources()
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 	);
 
-	m_p01_Implicit->CreateDeviceDependentResources();
+	//m_p01_Implicit->CreateDeviceDependentResources();
 	//m_p02_Explicit->CreateDeviceDependentResources();
 	//m_p03_Explicit->CreateDeviceDependentResources();
-	//m_p04_Explicit->CreateDeviceDependentResources();
+	m_p04_Explicit->CreateDeviceDependentResources();
 	//m_p05_Explicit->CreateDeviceDependentResources();
 }
 
@@ -106,7 +107,9 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void SceneRenderer::Update(DX::StepTimer const& timer)
 {
-	std::wstring tessDispText = L"Tessallation Factor: " + std::to_wstring(m_tessellationFactor) + L" (- & = to adjust)"; // \r\n Displacement Power : " + std::to_wstring(m_displacementPower) + L" ([&] to adjust)";
+	std::wstring tessDispText = L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) + L"\n\n Press < and > to adjust tessellation factor" + 
+		L"\n\n Camera at: " + std::to_wstring(m_camera->GetPosition().x + ',') + std::to_wstring(m_camera->GetPosition().y + ',') + std::to_wstring(m_camera->GetPosition().z);
+	// \r\n Displacement Power : " + std::to_wstring(m_displacementPower) + L" ([&] to adjust)";
 
 	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
@@ -130,10 +133,10 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 	ProcessInput(timer);
 
-	m_p01_Implicit->Update(timer);
+	//m_p01_Implicit->Update(timer);
 	// m_p02_Explicit->Update(timer);
 	// m_p03_Explicit->Update(timer);
-	// m_p04_Explicit->Update(timer);
+	m_p04_Explicit->Update(timer);
 	// m_p05_Explicit->Update(timer);
 
 }
@@ -146,13 +149,17 @@ void SceneRenderer::Render()
 	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 	m_camera->GetViewMatrix(viewMatrix);
 
-	m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	/*m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
-	m_p01_Implicit->Render();
+	m_p01_Implicit->Render();*/
 
 	//m_p02_Explicit->Render();
 	//m_p03_Explicit->Render();
-	//m_p04_Explicit->Render();
+
+	m_p04_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p04_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p04_Explicit->Render();
+
 	//m_p05_Explicit->Render();
 
 	ID2D1DeviceContext* context = m_deviceResources->GetD2DDeviceContext();
@@ -163,8 +170,8 @@ void SceneRenderer::Render()
 
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
-		logicalSize.Width - m_textMetrics.layoutWidth,
-		logicalSize.Height - m_textMetrics.height - 50
+		logicalSize.Width - m_textMetrics.layoutWidth - 10,
+		m_textMetrics.height
 	);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
@@ -186,16 +193,17 @@ void SceneRenderer::Render()
 	}
 
 	context->RestoreDrawingState(m_stateBlock.Get());
+
 }
 
 void SceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteBrush.Reset();
 
-	m_p01_Implicit->ReleaseDeviceDependentResources();
+	//m_p01_Implicit->ReleaseDeviceDependentResources();
 	//m_p02_Explicit->ReleaseDeviceDependentResources();
 	//m_p03_Explicit->ReleaseDeviceDependentResources();
-	//m_p04_Explicit->ReleaseDeviceDependentResources();
+	m_p04_Explicit->ReleaseDeviceDependentResources();
 	//m_p05_Explicit->ReleaseDeviceDependentResources();
 
 }
@@ -254,7 +262,7 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 		m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
 	}
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_MINUS)))
+	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_PERIOD)))
 	{
 		if (m_tessellationFactor > 1.0f)
 		{
@@ -262,7 +270,7 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 		}
 	}
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_PLUS)))
+	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_COMMA)))
 	{
 		if (m_tessellationFactor < 64.0f)
 		{

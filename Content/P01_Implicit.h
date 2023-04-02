@@ -9,10 +9,11 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 	// Graphic Pipeline 01:
 	// 
 	// Implicit modeling with signed distance based ray marching
+	// 
 	// Ocean surface and underwater effects.
 	// Reflective/Refractive Bubbles.
 	// Underwater plantations.
-	// Underwater coral object (Mandelbulb derivate)
+	// Underwater coral object (Mandelbulb derivate).
 
 	class P01_Implicit
 	{
@@ -20,7 +21,6 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		P01_Implicit(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection);
-		void SetResolutionConstantBuffer();
 		void SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition);
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);

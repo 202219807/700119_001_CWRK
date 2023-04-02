@@ -22,7 +22,7 @@ GuiRenderer::GuiRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResou
 			DWRITE_FONT_WEIGHT_MEDIUM,
 			DWRITE_FONT_STYLE_NORMAL,
 			DWRITE_FONT_STRETCH_NORMAL,
-			28.0f,
+			21.0f,
 			L"en-US",
 			&textFormat
 			)
@@ -84,7 +84,7 @@ void GuiRenderer::Render()
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
 		logicalSize.Width - m_textMetrics.layoutWidth - 10.0f,
-		 m_textMetrics.height - 45.0f
+		 m_textMetrics.height - 10.0f
 		);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
