@@ -151,9 +151,9 @@ float CoralSDF(float3 p)
     float3 zn = float3(p.xyz);
     float radius = 0.0;
     float hit = 0.0;
-    float n = 9; //12
+    float n = 10; //9; //12;
     float d = 2.0;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 18; i++) // 12;
     {
         radius = sqrt(dot(zn, zn));
         if (radius > 2.0)
@@ -413,8 +413,8 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
 {
     HitObject hObj = RayMarching(ray, MIN_DIST, MAX_DIST);
     float3 lightPos = float3(-1.0, 10.0, 1.0);
-    float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
-    //float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
+    // float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
+    float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
     float3 pixelColor = deepColor;
     
     float3 p = ray.o + hObj.d * ray.d;
@@ -453,7 +453,7 @@ float4 main(PS_INPUT input) : SV_Target
     Ray ray;
 
     // Set eye position
-    ray.o = float3(-2.0, -1.8, 10.0);
+    ray.o = float3(-2.0, -1.8, 5.0);
 
     // Set ray direction in view space 
     float dist2Imageplane = 1.0;
