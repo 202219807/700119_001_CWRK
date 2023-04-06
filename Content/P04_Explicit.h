@@ -33,7 +33,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// Shader pointers
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader;
-		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	    m_geometryShader;
+		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_geometryShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader;
 
 		// Rasterization
@@ -45,7 +45,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// System resources for shaders
 		ModelViewProjectionConstantBuffer				m_mvpBufferData;
-		CameraPositionConstantBuffer					m_cameraBufferData;
+		CameraTrackingBuffer							m_cameraBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

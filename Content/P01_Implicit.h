@@ -50,13 +50,12 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		
 		// System resources for shaders
 		ModelViewProjectionConstantBuffer				m_mvpBufferData;
-		CameraPositionConstantBuffer					m_cameraBufferData;
-		ElapsedTimeConstantBuffer						m_timeBufferData;
-		ResolutionConstantBuffer						m_resolutionBufferData;
+		CameraTrackingBuffer							m_cameraBufferData;
+		ElapsedTimeBuffer								m_timeBufferData;
+		ScreenResolutionBuffer							m_resolutionBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.
 		bool											m_loadingComplete;
-
 	};
 }

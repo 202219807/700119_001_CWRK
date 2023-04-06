@@ -15,189 +15,6 @@ P05_Explicit::P05_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceRes
 	m_deviceResources(deviceResources)
 {
 	CreateDeviceDependentResources();
-	CreateWindowSizeDependentResources();
-}
-
-// Initializes view parameters when the window size changes.
-void P05_Explicit::CreateWindowSizeDependentResources()
-{
-	Size outputSize = m_deviceResources->GetOutputSize();
-	float aspectRatio = outputSize.Width / outputSize.Height;
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
-
-	// This is a simple example of change that can be made when the app is in
-	// portrait or snapped view.
-	if (aspectRatio < 1.0f)
-	{
-		fovAngleY *= 2.0f;
-	}
-
-	// Note that the OrientationTransform3D matrix is post-multiplied here
-	// in order to correctly orient the scene to match the display orientation.
-	// This post-multiplication step is required for any draw calls that are
-	// made to the swap chain render target. For draw calls to other targets,
-	// this transform should not be applied.
-
-	// This sample makes use of a right-handed coordinate system using row-major matrices.
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
-		fovAngleY,
-		aspectRatio,
-		0.01f,
-		100.0f
-	);
-
-	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
-
-	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
-
-	XMStoreFloat4x4(
-		&m_constantBufferData.projection,
-		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
-	);
-
-	// Default: Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	
-	static const XMVECTORF32 eye = { 0.0f, -1.0f, 15.0f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -1.8f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-	//XMStoreFloat4(&m_constantBufferData.eye, eye);
-}
-
-// Called once per frame, rotates the cube and calculates the model and view matrices.
-void P05_Explicit::Update(DX::StepTimer const& timer)
-{
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.time, time);
-
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	int viewportWidth = m_deviceResources->GetOutputSize().Width;
-	int viewportHeight = m_deviceResources->GetOutputSize().Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
-}
-
-// Renders one frame using the vertex and pixel shaders.
-void P05_Explicit::Render()
-{
-	// Loading is asynchronous. Only draw geometry after it's loaded.
-	if (!m_loadingComplete)
-	{
-		return;
-	}
-
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
-	);
-
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
-
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-	);
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// detach our hull shader.
-	context->HSSetShader(
-		nullptr,
-		nullptr,
-		0
-	);
-
-	// detach our domain shader.
-	context->DSSetShader(
-		nullptr,
-		nullptr,
-		0
-	);
-
-	// Attach our geometry shader.
-	context->GSSetShader(
-		m_geometryShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->GSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Rasterization
-	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
-	auto device = m_deviceResources->GetD3DDevice();
-
-	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	device->CreateRasterizerState(&rasterizerDesc,
-		m_rasterizerState.GetAddressOf());
-
-	context->RSSetState(m_rasterizerState.Get());
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-	);
-
-	// Draw the object.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-	);
 }
 
 void P05_Explicit::CreateDeviceDependentResources()
@@ -246,16 +63,34 @@ void P05_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		CD3D11_BUFFER_DESC MVPBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
+				&MVPBufferDesc,
 				nullptr,
-				&m_constantBuffer
+				&m_mvpBuffer
+			)
+		);
+
+		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&CameraBufferDesc,
+				nullptr,
+				&m_cameraBuffer
+			)
+		);
+
+		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&TimeBufferDesc,
+				nullptr,
+				&m_timeBuffer
 			)
 		);
 		});
-	
+
 	// After the pixel shader file is loaded, create the shader and constant buffer.
 	auto createPipeline05_PSTask = loadPipeline05_PSTask.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
@@ -264,6 +99,22 @@ void P05_Explicit::CreateDeviceDependentResources()
 				fileData.size(),
 				nullptr,
 				&m_pixelShader
+			)
+		);
+		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&CameraBufferDesc,
+				nullptr,
+				&m_cameraBuffer
+			)
+		);
+		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&TimeBufferDesc,
+				nullptr,
+				&m_timeBuffer
 			)
 		);
 		});
@@ -350,6 +201,166 @@ void P05_Explicit::CreateDeviceDependentResources()
 		});
 }
 
+// Called once per frame, rotates the cube and calculates the model and view matrices.
+void P05_Explicit::Update(DX::StepTimer const& timer)
+{
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+
+	m_timeBufferData.time = timer.GetTotalSeconds();
+}
+
+// Renders one frame using the vertex and pixel shaders.
+void P05_Explicit::Render()
+{
+	// Loading is asynchronous. Only draw geometry after it's loaded.
+	if (!m_loadingComplete)
+	{
+		return;
+	}
+
+	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_mvpBuffer.Get(),
+		0,
+		NULL,
+		&m_mvpBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_cameraBuffer.Get(),
+		0,
+		NULL,
+		&m_cameraBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_timeBuffer.Get(),
+		0,
+		NULL,
+		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+	// Each vertex is one instance of the VertexPositionColor struct.
+	UINT stride = sizeof(VertexPositionColor);
+	UINT offset = 0;
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Detach our hull shader.
+	context->HSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// Detach our domain shader.
+	context->DSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->GSSetConstantBuffers1(
+		0,
+		1,
+		m_mvpBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->GSSetConstantBuffers1(
+		1,
+		1,
+		m_cameraBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->GSSetConstantBuffers1(
+		2,
+		1,
+		m_timeBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Attach our geometry shader.
+	context->GSSetShader(
+		m_geometryShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Rasterization
+	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+
+	auto device = m_deviceResources->GetD3DDevice();
+
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	device->CreateRasterizerState(&rasterizerDesc,
+		m_rasterizerState.GetAddressOf());
+
+	context->RSSetState(m_rasterizerState.Get());
+
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_cameraBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Draw the object.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
+}
+
 void P05_Explicit::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
@@ -357,7 +368,21 @@ void P05_Explicit::ReleaseDeviceDependentResources()
 	m_vertexShader.Reset();
 	m_geometryShader.Reset();
 	m_pixelShader.Reset();
-	m_constantBuffer.Reset();
+	m_mvpBuffer.Reset();
+	m_cameraBuffer.Reset();
+	m_timeBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
+}
+
+void P05_Explicit::SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
+{
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.view, DirectX::XMMatrixTranspose(view));
+
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.projection, DirectX::XMMatrixTranspose(projection));
+}
+
+void P05_Explicit::SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition)
+{
+	m_cameraBufferData.position = cameraPosition;
 }

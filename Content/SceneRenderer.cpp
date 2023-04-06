@@ -12,9 +12,6 @@ using namespace Microsoft::WRL;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_tessellationFactor(31.0f),
-	// m_displacementPower(0.4f),
-	m_degreesPerSecond(45),
-	m_tracking(false),
 	m_deviceResources(deviceResources)
 {
 	// Create device independent resources
@@ -26,7 +23,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 			DWRITE_FONT_WEIGHT_MEDIUM,
 			DWRITE_FONT_STYLE_NORMAL,
 			DWRITE_FONT_STRETCH_NORMAL,
-			21.0f,
+			16.0f,
 			L"en-US",
 			&textFormat
 		)
@@ -48,16 +45,15 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 	m_camera->SetPosition(0.0f, -2.5f, -15.5f);
 	m_camera->SetRotation(0.0f, 0.0f, 0.0f);
 
-	//m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
-	//m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
-	//m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
+	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
+	m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
 	m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
-	//m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
+	m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
 
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 	);
-
 
 	CreateWindowSizeDependentResources();
 }
@@ -68,11 +64,11 @@ void SceneRenderer::CreateDeviceDependentResources()
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 	);
 
-	//m_p01_Implicit->CreateDeviceDependentResources();
-	//m_p02_Explicit->CreateDeviceDependentResources();
-	//m_p03_Explicit->CreateDeviceDependentResources();
+	m_p01_Implicit->CreateDeviceDependentResources();
+	m_p02_Explicit->CreateDeviceDependentResources();
+	m_p03_Explicit->CreateDeviceDependentResources();
 	m_p04_Explicit->CreateDeviceDependentResources();
-	//m_p05_Explicit->CreateDeviceDependentResources();
+	m_p05_Explicit->CreateDeviceDependentResources();
 }
 
 // Initializes view parameters when the window size changes.
@@ -107,17 +103,22 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void SceneRenderer::Update(DX::StepTimer const& timer)
 {
-	std::wstring tessDispText = L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) + L"\n\n Press < and > to adjust tessellation factor" + 
-		L"\n\n Camera at: " + std::to_wstring(m_camera->GetPosition().x + ',') + std::to_wstring(m_camera->GetPosition().y + ',') + std::to_wstring(m_camera->GetPosition().z);
-	// \r\n Displacement Power : " + std::to_wstring(m_displacementPower) + L" ([&] to adjust)";
+	std::wstring guiText = 
+		L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) + 
+		L"\n Press < and > to adjust tessellation factor" +
+		L"\n\n\n Camera position: \n[" + 
+		std::to_wstring(m_camera->GetPosition().x) + L"," + 
+		std::to_wstring(m_camera->GetPosition().y) + L"," + 
+		std::to_wstring(m_camera->GetPosition().z) + L"]";
+
 
 	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
 		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
-			tessDispText.c_str(),
-			(uint32)tessDispText.length(),
+			guiText.c_str(),
+			(uint32)guiText.length(),
 			m_textFormat.Get(),
-			1200.0f, // Max width of the input text.
+			1000.0f, // Max width of the input text.
 			100.0f, // Max height of the input text.
 			&textLayout
 		)
@@ -133,11 +134,11 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 	ProcessInput(timer);
 
-	//m_p01_Implicit->Update(timer);
-	// m_p02_Explicit->Update(timer);
-	// m_p03_Explicit->Update(timer);
+	m_p01_Implicit->Update(timer);
+	m_p02_Explicit->Update(timer);
+	m_p03_Explicit->Update(timer);
 	m_p04_Explicit->Update(timer);
-	// m_p05_Explicit->Update(timer);
+	m_p05_Explicit->Update(timer);
 
 }
 
@@ -149,18 +150,25 @@ void SceneRenderer::Render()
 	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 	m_camera->GetViewMatrix(viewMatrix);
 
-	/*m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
-	m_p01_Implicit->Render();*/
+	m_p01_Implicit->Render();
 
-	//m_p02_Explicit->Render();
-	//m_p03_Explicit->Render();
+	m_p02_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p02_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p02_Explicit->Render();
+
+	m_p03_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p03_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p03_Explicit->Render();
 
 	m_p04_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p04_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
 	m_p04_Explicit->Render();
 
-	//m_p05_Explicit->Render();
+	m_p05_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p05_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p05_Explicit->Render();
 
 	ID2D1DeviceContext* context = m_deviceResources->GetD2DDeviceContext();
 	Windows::Foundation::Size logicalSize = m_deviceResources->GetLogicalSize();
@@ -171,7 +179,7 @@ void SceneRenderer::Render()
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
 		logicalSize.Width - m_textMetrics.layoutWidth - 10,
-		m_textMetrics.height
+		m_textMetrics.height - 50
 	);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
@@ -200,18 +208,16 @@ void SceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteBrush.Reset();
 
-	//m_p01_Implicit->ReleaseDeviceDependentResources();
-	//m_p02_Explicit->ReleaseDeviceDependentResources();
-	//m_p03_Explicit->ReleaseDeviceDependentResources();
+	m_p01_Implicit->ReleaseDeviceDependentResources();
+	m_p02_Explicit->ReleaseDeviceDependentResources();
+	m_p03_Explicit->ReleaseDeviceDependentResources();
 	m_p04_Explicit->ReleaseDeviceDependentResources();
-	//m_p05_Explicit->ReleaseDeviceDependentResources();
+	m_p05_Explicit->ReleaseDeviceDependentResources();
 
 }
 
 void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 {
-	//CoreVirtualKeyStates::Down
-
 	if (IsKeyPressed(VirtualKey::W))
 	{
 		m_camera->MoveForward(10.0f * timer.GetElapsedSeconds());
@@ -232,12 +238,12 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 		m_camera->MoveRight(10.0f * timer.GetElapsedSeconds());
 	}
 
-	if (IsKeyPressed(VirtualKey::Shift))
+	if (IsKeyPressed(VirtualKey::Control))
 	{
 		m_camera->AddPositionY(-10.0f * timer.GetElapsedSeconds());
 	}
 
-	if (IsKeyPressed(VirtualKey::Control))
+	if (IsKeyPressed(VirtualKey::Shift))
 	{
 		m_camera->AddPositionY(10.0f * timer.GetElapsedSeconds());
 	}
@@ -277,19 +283,13 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 			m_tessellationFactor += 1.0f;
 		}
 	}
-
-	//if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_4)))
-	//{
-	//	m_displacementPower -= 0.01f;
-	//}
-
-	//if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_6)))
-	//{
-	//	m_displacementPower += 0.01f;
-	//}
 }
 
 bool SceneRenderer::IsKeyPressed(VirtualKey key)
 {
-	return (CoreWindow::GetForCurrentThread()->GetKeyState(key) & CoreVirtualKeyStates::Down) == CoreVirtualKeyStates::Down;
+	auto keyDownState = CoreVirtualKeyStates::Down;
+	auto currentKeyState = CoreWindow::GetForCurrentThread()->GetKeyState(key);
+
+	if ((currentKeyState & keyDownState) == keyDownState) return true;
+	return false;
 }

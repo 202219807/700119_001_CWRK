@@ -163,6 +163,15 @@
     <FxCompile Include="Content\P05_VS.hlsl">
       <Filter>Content\Graphic Pipelines\P05</Filter>
     </FxCompile>
+    <FxCompile Include="Content\P04_GS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P04_PS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P04_VS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Content\MathUtils.hlsli">

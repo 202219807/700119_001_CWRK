@@ -39,6 +39,7 @@ void P04_Explicit::CreateDeviceDependentResources()
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		};
 
 		DX::ThrowIfFailed(
@@ -84,10 +85,10 @@ void P04_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-		CD3D11_BUFFER_DESC cameraBufferDesc(sizeof(CameraPositionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&cameraBufferDesc,
+				&CameraBufferDesc,
 				nullptr,
 				&m_cameraBuffer
 			)
@@ -101,16 +102,43 @@ void P04_Explicit::CreateDeviceDependentResources()
 		// Cube
 
 		// Load mesh vertices. Each vertex has a position and a color.
-		static const VertexPositionColor cubeVertices[] =
+		static const VertexPositionColorNormal cubeVertices[] =
 		{
-			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+			// Top face
+					{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f,1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT3(1.0f,1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)  },
+					{ XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f,1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)   },
+					{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(1.0f,1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f)  },
+
+					// Bottom face
+					{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.9f,0.2f, 0.5f),XMFLOAT3(0.0f, -1.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.9f,0.2f, 0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT3(0.9f,0.2f, 0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f)  },
+					{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.9f,0.2f, 0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f) },
+
+					// Left face
+					{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.0f,0.8f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f)  },
+					{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f,0.8f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f) },
+					{ XMFLOAT3(-1.0f, 1.0f, -1.0f), XMFLOAT3(0.0f,0.8f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f)  },
+					{ XMFLOAT3(-1.0f, 1.0f, 1.0f), XMFLOAT3(0.0f,0.8f, 1.0f), XMFLOAT3(-1.0f, 0.0f, 0.0f)   },
+
+					// Right face
+					{ XMFLOAT3(1.0f, -1.0f, 1.0f),  XMFLOAT3(0.0f,0.5f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT3(0.0f,0.5f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, 1.0f, -1.0f),  XMFLOAT3(0.0f,0.5f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+					{ XMFLOAT3(1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0f,0.5f, 1.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+
+					// Front face
+					{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(0.4f,1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+					{ XMFLOAT3(1.0f, -1.0f, -1.0f),  XMFLOAT3(0.4f,1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+					{ XMFLOAT3(1.0f, 1.0f, -1.0f),   XMFLOAT3(0.4f,1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+					{ XMFLOAT3(-1.0f, 1.0f, -1.0f),  XMFLOAT3(0.4f,1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f) },
+
+					// Back face
+					{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT3(0.5f,0.5f, 0.8f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+					{ XMFLOAT3(1.0f, -1.0f, 1.0f),  XMFLOAT3(0.5f,0.5f, 0.8f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+					{ XMFLOAT3(1.0f, 1.0f, 1.0f),   XMFLOAT3(0.5f,0.5f, 0.8f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+					{ XMFLOAT3(-1.0f, 1.0f, 1.0f),  XMFLOAT3(0.5f,0.5f, 0.8f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
 		};
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
@@ -133,23 +161,23 @@ void P04_Explicit::CreateDeviceDependentResources()
 		// first triangle of this mesh.
 		static const unsigned short cubeIndices[] =
 		{
-			0,2,1, // -x
-			1,2,3,
+			3,1,0,
+			2,1,3,
 
-			4,5,6, // +x
-			5,7,6,
+			6,4,5,
+			7,4,6,
 
-			0,1,5, // -y
-			0,5,4,
+			11,9,8,
+			10,9,11,
 
-			2,6,7, // +y
-			2,7,3,
+			14,12,13,
+			15,12,14,
 
-			0,4,6, // -z
-			0,6,2,
+			19,17,16,
+			18,17,19,
 
-			1,3,7, // +z
-			1,7,5,
+			22,20,21,
+			23,20,22
 		};
 
 		m_indexCount = ARRAYSIZE(cubeIndices);
@@ -213,7 +241,7 @@ void P04_Explicit::Render()
 	);
 
 	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
+	UINT stride = sizeof(VertexPositionColorNormal);
 	UINT offset = 0;
 
 	context->IASetVertexBuffers(
@@ -230,7 +258,7 @@ void P04_Explicit::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //TRIANGLELIST
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -241,8 +269,22 @@ void P04_Explicit::Render()
 		0
 	);
 
+	// Detach our hull shader.
+	context->HSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
+	// Detach our domain shader.
+	context->DSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
 	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
+	context->GSSetConstantBuffers1(
 		0,
 		1,
 		m_mvpBuffer.GetAddressOf(),
@@ -250,21 +292,7 @@ void P04_Explicit::Render()
 		nullptr
 	);
 
-	// detach our hull shader.
-	context->HSSetShader(
-		nullptr,
-		nullptr,
-		0
-	);
-
-	// detach our domain shader.
-	context->DSSetShader(
-		nullptr,
-		nullptr,
-		0
-	);
-
-	// detach our geometry shader.
+	// Attach our geometry shader.
 	context->GSSetShader(
 		m_geometryShader.Get(),
 		nullptr,

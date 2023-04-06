@@ -3,9 +3,18 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix model;
 	matrix view;
 	matrix projection;
-	float4 elapsedTime;
-	float4 resolution;
-	float4 eye;
+};
+
+cbuffer CameraConstantBuffer : register(b1)
+{
+    float3 cameraPosition;
+    float padding;
+};
+
+cbuffer TimeConstantBuffer : register(b2)
+{
+    float elapsedTime;
+    float3 padding2;
 };
 
 struct VS_INPUT
@@ -30,7 +39,7 @@ VS_OUTPUT main(VS_INPUT input)
 	float r = 1.0f;
 	inPos.x = r * sin(input.pos.y) * cos(input.pos.x);
 	inPos.y = r * sin(input.pos.y) * sin(input.pos.x) - 2.0;
-	inPos.z = r * cos(input.pos.y  * sin(elapsedTime.x * 0.5));
+	inPos.z = r * cos(input.pos.y  * sin(elapsedTime * 0.5));
 
 	inPos.xyz *= 5.0;
 	inPos.z -= 10.0;

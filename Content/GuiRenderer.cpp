@@ -22,7 +22,7 @@ GuiRenderer::GuiRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResou
 			DWRITE_FONT_WEIGHT_MEDIUM,
 			DWRITE_FONT_STYLE_NORMAL,
 			DWRITE_FONT_STRETCH_NORMAL,
-			21.0f,
+			16.0f,
 			L"en-US",
 			&textFormat
 			)

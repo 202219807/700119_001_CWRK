@@ -15,73 +15,14 @@ P03_Explicit::P03_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceRes
 	m_deviceResources(deviceResources)
 {
 	CreateDeviceDependentResources();
-	CreateWindowSizeDependentResources();
-}
-
-// Initializes view parameters when the window size changes.
-void P03_Explicit::CreateWindowSizeDependentResources()
-{
-	Size outputSize = m_deviceResources->GetOutputSize();
-	float aspectRatio = outputSize.Width / outputSize.Height;
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
-
-	// This is a simple example of change that can be made when the app is in
-	// portrait or snapped view.
-	if (aspectRatio < 1.0f)
-	{
-		fovAngleY *= 2.0f;
-	}
-
-	// Note that the OrientationTransform3D matrix is post-multiplied here
-	// in order to correctly orient the scene to match the display orientation.
-	// This post-multiplication step is required for any draw calls that are
-	// made to the swap chain render target. For draw calls to other targets,
-	// this transform should not be applied.
-
-	// This sample makes use of a right-handed coordinate system using row-major matrices.
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
-		fovAngleY,
-		aspectRatio,
-		0.01f,
-		100.0f
-	);
-
-	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
-
-	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
-
-	XMStoreFloat4x4(
-		&m_constantBufferData.projection,
-		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
-	);
-
-	// Default: Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-
-	static const XMVECTORF32 eye = { 0.0f, -1.0f, 14.0f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -1.2f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-	//XMStoreFloat4(&m_constantBufferData.eye, eye);
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void P03_Explicit::Update(DX::StepTimer const& timer)
 {
-	auto context = m_deviceResources->GetD3DDeviceContext();
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.time, time);
-
-
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	int viewportWidth = m_deviceResources->GetOutputSize().Width;
-	int viewportHeight = m_deviceResources->GetOutputSize().Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	m_timeBufferData.time = timer.GetTotalSeconds();
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -97,14 +38,45 @@ void P03_Explicit::Render()
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_mvpBuffer.Get(),
 		0,
 		NULL,
-		&m_constantBufferData,
+		&m_mvpBufferData,
 		0,
 		0,
 		0
 	);
+
+	context->UpdateSubresource1(
+		m_cameraBuffer.Get(),
+		0,
+		NULL,
+		&m_cameraBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_timeBuffer.Get(),
+		0,
+		NULL,
+		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_resolutionBuffer.Get(),
+		0,
+		NULL,
+		&m_resolutionBufferData,
+		0,
+		0,
+		0
+	);
+
 
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColor);
@@ -153,7 +125,23 @@ void P03_Explicit::Render()
 	context->DSSetConstantBuffers1(
 		0,
 		1,
-		m_constantBuffer.GetAddressOf(),
+		m_mvpBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->DSSetConstantBuffers1(
+		1,
+		1,
+		m_cameraBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->DSSetConstantBuffers1(
+		2,
+		1,
+		m_timeBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);
@@ -250,15 +238,6 @@ void P03_Explicit::CreateDeviceDependentResources()
 				&m_domainShader
 			)
 		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
-			)
-		);
 		});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
@@ -269,6 +248,45 @@ void P03_Explicit::CreateDeviceDependentResources()
 				fileData.size(),
 				nullptr,
 				&m_pixelShader
+			)
+		);
+
+
+		CD3D11_BUFFER_DESC MVPBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&MVPBufferDesc,
+				nullptr,
+				&m_mvpBuffer
+			)
+		);
+
+
+		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&CameraBufferDesc,
+				nullptr,
+				&m_cameraBuffer
+			)
+		);
+
+
+		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&TimeBufferDesc,
+				nullptr,
+				&m_timeBuffer
+			)
+		);
+
+		CD3D11_BUFFER_DESC ResolutionBufferDesc(sizeof(ScreenResolutionBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&ResolutionBufferDesc,
+				nullptr,
+				&m_resolutionBuffer
 			)
 		);
 		});
@@ -360,7 +378,22 @@ void P03_Explicit::ReleaseDeviceDependentResources()
 	m_hullShader.Reset();
 	m_domainShader.Reset();
 	m_pixelShader.Reset();
-	m_constantBuffer.Reset();
+	m_mvpBuffer.Reset();
+	m_cameraBuffer.Reset();
+	m_timeBuffer.Reset();
+	m_resolutionBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
+}
+
+void P03_Explicit::SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection)
+{
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.view, DirectX::XMMatrixTranspose(view));
+
+	DirectX::XMStoreFloat4x4(&m_mvpBufferData.projection, DirectX::XMMatrixTranspose(projection));
+}
+
+void P03_Explicit::SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition)
+{
+	m_cameraBufferData.position = cameraPosition;
 }

@@ -71,33 +71,33 @@ void P01_Implicit::CreateDeviceDependentResources()
 		)
 	);
 
-	CD3D11_BUFFER_DESC cameraBufferDesc(sizeof(CameraPositionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&cameraBufferDesc,
+			&CameraBufferDesc,
 			nullptr,
 			&m_cameraBuffer
 		)
 	);
 
-	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(ElapsedTimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&timeBufferDesc,
+			&TimeBufferDesc,
 			nullptr,
 			&m_timeBuffer
 		)
 	);
 
-	CD3D11_BUFFER_DESC resolutionBufferDesc(sizeof(ResolutionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	CD3D11_BUFFER_DESC ResolutionBufferDesc(sizeof(ScreenResolutionBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&resolutionBufferDesc,
+			&ResolutionBufferDesc,
 			nullptr,
 			&m_resolutionBuffer
 		)
 	);
-		});
+	});
 
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline01_PSTask && createPipeline01_VSTask).then([this]() {
@@ -181,7 +181,6 @@ void P01_Implicit::CreateDeviceDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void P01_Implicit::Update(DX::StepTimer const& timer)
 {
-
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
 	m_timeBufferData.time = timer.GetTotalSeconds();
@@ -197,7 +196,6 @@ void P01_Implicit::Update(DX::StepTimer const& timer)
 
 	m_resolutionBufferData.resolutionY = viewportHeight;
 	m_resolutionBufferData.resolutionX = viewportWidth;
-
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -290,21 +288,21 @@ void P01_Implicit::Render()
 		nullptr
 	);
 
-	// detach our hull shader.
+	// Detach our hull shader.
 	context->HSSetShader(
 		nullptr,
 		nullptr,
 		0
 	);
 
-	// detach our domain shader.
+	// Detach our domain shader.
 	context->DSSetShader(
 		nullptr,
 		nullptr,
 		0
 	);
 
-	// detach our geometry shader.
+	// Detach our geometry shader.
 	context->GSSetShader(
 		nullptr,
 		nullptr,

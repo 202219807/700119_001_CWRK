@@ -9,8 +9,8 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    float3 lightDir = normalize(float3(1.0, 1.0, 1.0));
-    float3 lightColor = float3(1.0, 1.0, 1.0);
+    float3 lightDir = normalize(float3(50.0, 50.0, -50.0));
+    float3 lightColor = float3(0.8, 0.8, 0.9);
 	
     float3 diffuse = saturate(dot(input.normal, lightDir)) * lightColor;
     float3 specular = 0.0;
@@ -26,6 +26,5 @@ float4 main(PS_INPUT input) : SV_TARGET
     float4 textureColor = float4(noiseValue, noiseValue, noiseValue, 1.0);
       
     float3 finalColor = textureColor.xyz * diffuse + specular;
-    return float4(finalColor, 1.0);
-
+    return float4(input.normal, 1.0);
 }

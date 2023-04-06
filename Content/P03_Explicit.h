@@ -17,7 +17,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 	public:
 		P03_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
-		void CreateWindowSizeDependentResources();
+		void SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view, DirectX::XMMATRIX& projection);
+		void SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition);
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
@@ -37,14 +38,20 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11DomainShader>	    m_domainShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader;
 
-		// Constant buffers
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
-
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;
+		
+		// Constant buffers
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_mvpBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_resolutionBuffer;
 
 		// System resources for cube geometry.
-		ModelViewProjectionConstantBuffer				m_constantBufferData;
+		ModelViewProjectionConstantBuffer				m_mvpBufferData;
+		CameraTrackingBuffer							m_cameraBufferData;
+		ElapsedTimeBuffer								m_timeBufferData;
+		ScreenResolutionBuffer							m_resolutionBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

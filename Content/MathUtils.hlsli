@@ -82,3 +82,24 @@ float softMin(float a, float b, float k)
     return lerp(b, a, h) - k * h * (1.0 - h);
 }
 
+/* Gradient */
+float3 Gradient(float3 position)
+{
+    // Define the start and end colors of the gradient
+    float3 startColor = float3(0.0, 1.0, 1.0); // Blue
+    float3 endColor = float3(1.0, 0.0, 0.0); // Yellow
+
+    // Calculate the position's distance from the origin
+    float distance = length(position);
+
+    // Normalize the position vector to get a value between 0 and 1
+    float t = saturate(dot(normalize(position), normalize(float3(-1.0, 1.0, 0.0))));
+
+    // Add variation to the colors
+    float3 colorVariationVector = sin(position * 0.6);
+    startColor += colorVariationVector;
+    endColor += colorVariationVector;
+
+    // Interpolate between the start and end colors based on the distance
+    return lerp(startColor, endColor, t);
+}

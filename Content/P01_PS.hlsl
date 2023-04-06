@@ -428,7 +428,7 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
         float3 K_a = float3(0.2, 0.2, 0.2);
         float3 K_d = float3(0.2, 0.2, 0.2);
         float3 K_s = float3(1.0, 1.0, 1.0);
-        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor;
+        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor; // review
     }
     
     // Post processing
