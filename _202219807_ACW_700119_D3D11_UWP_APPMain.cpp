@@ -16,7 +16,6 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::_202219807_ACW_700119_D3D11_UWP_APPMain
 
 	// TODO: Replace this with your app's content initialization.
 	m_sceneRenderer = std::unique_ptr<SceneRenderer>(new SceneRenderer(m_deviceResources));
-	m_guiRenderer = std::unique_ptr<GuiRenderer>(new GuiRenderer(m_deviceResources));
 
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:	
@@ -45,7 +44,6 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::Update()
 	{
 		// TODO: Replace this with your app's content update functions.
 		m_sceneRenderer->Update(m_timer);
-		m_guiRenderer->Update(m_timer);
 	});
 }
 
@@ -76,7 +74,6 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
 	m_sceneRenderer->Render();
-	m_guiRenderer->Render();
 
 	return true;
 }
@@ -85,13 +82,11 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
 	m_sceneRenderer->ReleaseDeviceDependentResources();
-	m_guiRenderer->ReleaseDeviceDependentResources();
 }
 
 // Notifies renderers that device resources may now be recreated.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
 	m_sceneRenderer->CreateDeviceDependentResources();
-	m_guiRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }

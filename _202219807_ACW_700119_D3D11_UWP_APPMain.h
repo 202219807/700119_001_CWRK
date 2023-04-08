@@ -3,7 +3,6 @@
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
 #include "Content\SceneRenderer.h"
-#include "Content\GuiRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
 namespace _202219807_ACW_700119_D3D11_UWP_APP
@@ -27,7 +26,6 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// TODO: Replace with your own content renderers.
 		std::unique_ptr<SceneRenderer>					    m_sceneRenderer;
-		std::unique_ptr<GuiRenderer>						m_guiRenderer;
 
 		// Rendering loop timer.
 		DX::StepTimer										m_timer;

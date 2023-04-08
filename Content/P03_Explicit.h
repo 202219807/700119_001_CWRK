@@ -12,6 +12,9 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 	// parametric surface designing and
 	// tessellation with SM5 hull and domain shaders.
 
+	using namespace Windows::System;
+	using namespace Windows::UI::Core;
+
 	class P03_Explicit
 	{
 	public:
@@ -22,6 +25,10 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
+
+	private:
+		void ProcessInput(DX::StepTimer const& timer);
+		bool IsKeyPressed(VirtualKey key);
 
 	private:
 		// Cached pointer to device resources.
@@ -56,6 +63,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// Variables used with the rendering loop.
 		bool											m_loadingComplete;
+		bool											m_isWireframe;
 
 	};
 }

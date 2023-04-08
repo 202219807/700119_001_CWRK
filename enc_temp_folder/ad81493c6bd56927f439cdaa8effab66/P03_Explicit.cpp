@@ -396,11 +396,19 @@ void P03_Explicit::ProcessInput(DX::StepTimer const& timer)
 	if (IsKeyPressed(VirtualKey::R))
 	{
 		m_isWireframe = !m_isWireframe;
+
 		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 		auto device = m_deviceResources->GetD3DDevice();
 		rasterizerDesc.CullMode = D3D11_CULL_NONE;
-		if (m_isWireframe) rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-		else  rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+
+		if (m_isWireframe)
+		{
+			rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+		}
+		else 
+		{
+			rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+		}
 		device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
 	}
 

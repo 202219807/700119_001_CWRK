@@ -103,22 +103,34 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void SceneRenderer::Update(DX::StepTimer const& timer)
 {
+	// Update display text.
+	uint32 fps = timer.GetFramesPerSecond();
+
+	std::wstring guiHead = L"***********************\n* Simulation Controls *\n***********************\n\n";
+
 	std::wstring guiText =
-		L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) +
-		L"\n Press < and > to adjust tessellation factor" +
-		L"\n\n\nNoise Scale: " + std::to_wstring(m_tessellationFactor * 0.3)+ //m_noiseScale) +
-		L"\n Press [ and ] to adjust noise strength"
-		
-		L"\n\n\n 'w': Enable wireframe mode" +
-		L"\n\n\n 'e': Render only explicit geometry" +
-		L"\n\n\n 't': Toggle theme" +
-		
-		L"\n\n\n\n\n Camera position: \n[" +
+
+		(fps > 0) ?
+
+		std::to_wstring(fps) + L" FPS" + 
+		L"\n\nCamera position:\n[" +
 		std::to_wstring(m_camera->GetPosition().x) + L"," +
 		std::to_wstring(m_camera->GetPosition().y) + L"," +
-		std::to_wstring(m_camera->GetPosition().z) + L"]";
+		std::to_wstring(m_camera->GetPosition().z) + L"]" + 
 
+		L"\n\nSV_TessFactor: " + std::to_wstring(m_tessellationFactor) +
+		L"\npress < or > to adjust tessellation factor" +
+		L"\n\nNoise Scale: " + std::to_wstring(m_tessellationFactor * 0.3) + //m_noiseScale) +
+		L"\npress [ or ] to adjust noise strength"
 
+		L"\n\n\n'r': enable wireframe mode" +
+		L"\n\n'e': render only explicit geometry" +
+		L"\n\n't': toggle theme" + 
+		L"\n\n'h': hide controls\n"
+
+		: L" - FPS";
+
+	guiText = guiHead + guiText;
 	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
 		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
@@ -185,14 +197,14 @@ void SceneRenderer::Render()
 
 	// Position on the bottom right corner
 	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
-		logicalSize.Width - m_textMetrics.layoutWidth - 10,
-		m_textMetrics.height - 50
+		20,// logicalSize.Width - m_textMetrics.layoutWidth - 10,
+		20 // m_textMetrics.height - 50
 	);
 
 	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
 
 	DX::ThrowIfFailed(
-		m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING)
+		m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING)
 	);
 
 	context->DrawTextLayout(

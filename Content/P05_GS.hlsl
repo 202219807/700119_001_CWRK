@@ -34,7 +34,7 @@ struct GS_OUTPUT
 float4 Transform(in float4 inPos)
 {
     inPos.xyz *= 1.5;
-    inPos.z -= 15.0;
+    inPos.z -= 55.0;
     
     inPos.x -= smoothstep(0, 2.0, cos(inPos.yz)) * sin(time) * 3.0;
     inPos.y -= smoothstep(0, 1.0, cos(inPos.z)) * sin(time) * 0.8;
