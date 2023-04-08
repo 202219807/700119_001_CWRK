@@ -23,15 +23,9 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClInclude Include="Content\GuiRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\ShaderStructures.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClCompile Include="Content\GuiRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
@@ -142,7 +136,7 @@
     <FxCompile Include="Content\P02_VS.hlsl">
       <Filter>Content\Graphic Pipelines\P02</Filter>
     </FxCompile>
-    <FxCompile Include="Content\P03_DS.hlsl">
+    <FxCompile Include="Content\P03_DS01.hlsl">
       <Filter>Content\Graphic Pipelines\P03</Filter>
     </FxCompile>
     <FxCompile Include="Content\P03_HS.hlsl">
@@ -171,6 +165,9 @@
     </FxCompile>
     <FxCompile Include="Content\P04_VS.hlsl">
       <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P03_DS02.hlsl">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

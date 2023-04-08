@@ -13,6 +13,7 @@ P03_Explicit::P03_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceRes
 	m_loadingComplete(false),
 	m_isWireframe(false),
 	m_tessellationFactor(31.0f),
+	m_noiseStrength(0.01f),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
 {
@@ -26,6 +27,7 @@ void P03_Explicit::Update(DX::StepTimer const& timer)
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 	m_timeBufferData.time = timer.GetTotalSeconds();
 	m_tessellationBufferData.tessellationFactor = m_tessellationFactor;
+	m_noiseBufferData.noiseStrength = m_noiseStrength;
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -71,20 +73,20 @@ void P03_Explicit::Render()
 	);
 
 	context->UpdateSubresource1(
-		m_resolutionBuffer.Get(),
+		m_tessellationBuffer.Get(),
 		0,
 		NULL,
-		&m_resolutionBufferData,
+		&m_tessellationBufferData,
 		0,
 		0,
 		0
 	);
 
 	context->UpdateSubresource1(
-		m_tessellationBuffer.Get(),
+		m_noiseBuffer.Get(),
 		0,
 		NULL,
-		&m_tessellationBufferData,
+		&m_noiseBufferData,
 		0,
 		0,
 		0
@@ -136,7 +138,7 @@ void P03_Explicit::Render()
 
 	// Attach our domain shader.
 	context->DSSetShader(
-		m_domainShader.Get(),
+		m_domainShader01.Get(),
 		nullptr,
 		0
 	);
@@ -166,6 +168,14 @@ void P03_Explicit::Render()
 		nullptr
 	);
 
+	context->DSSetConstantBuffers1(
+		3,
+		1,
+		m_noiseBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
 	// Detach our geometry shader.
 	context->GSSetShader(
 		nullptr,
@@ -189,15 +199,30 @@ void P03_Explicit::Render()
 		0,
 		0
 	);
+
+	// Attach our domain shader.
+	context->DSSetShader(
+		m_domainShader02.Get(),
+		nullptr,
+		0
+	);
+
+	// Draw the object.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
 }
 
 void P03_Explicit::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadPipeline03_VSTask = DX::ReadDataAsync(L"P03_VS.cso");
-	auto loadPipeline03_HSTask = DX::ReadDataAsync(L"P03_HS.cso");
-	auto loadPipeline03_DSTask = DX::ReadDataAsync(L"P03_DS.cso");
-	auto loadPipeline03_PSTask = DX::ReadDataAsync(L"P03_PS.cso");
+	auto loadPipeline03_VSTask   = DX::ReadDataAsync(L"P03_VS.cso");
+	auto loadPipeline03_HSTask   = DX::ReadDataAsync(L"P03_HS.cso");
+	auto loadPipeline03_DSTask01 = DX::ReadDataAsync(L"P03_DS01.cso");
+	auto loadPipeline03_DSTask02 = DX::ReadDataAsync(L"P03_DS02.cso");
+	auto loadPipeline03_PSTask   = DX::ReadDataAsync(L"P03_PS.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createPipeline03_VSTask = loadPipeline03_VSTask.then([this](const std::vector<byte>& fileData) {
@@ -240,13 +265,24 @@ void P03_Explicit::CreateDeviceDependentResources()
 		});
 
 	// After the domain shader file is loaded, create the shader and constant buffer.
-	auto createPipeline03_DSTask = loadPipeline03_DSTask.then([this](const std::vector<byte>& fileData) {
+	auto createPipeline03_DSTask01 = loadPipeline03_DSTask01.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateDomainShader(
 				&fileData[0],
 				fileData.size(),
 				nullptr,
-				&m_domainShader
+				&m_domainShader01
+			)
+		);
+		});
+
+	auto createPipeline03_DSTask02 = loadPipeline03_DSTask02.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateDomainShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_domainShader02
 			)
 		);
 		});
@@ -290,15 +326,6 @@ void P03_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-		CD3D11_BUFFER_DESC ResolutionBufferDesc(sizeof(ScreenResolutionBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&ResolutionBufferDesc,
-				nullptr,
-				&m_resolutionBuffer
-			)
-		);
-
 		CD3D11_BUFFER_DESC TessellationBufferDesc(sizeof(TessellationFactorBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
@@ -307,10 +334,20 @@ void P03_Explicit::CreateDeviceDependentResources()
 				&m_tessellationBuffer
 			)
 		);
+
+
+		CD3D11_BUFFER_DESC NoiseBufferDesc(sizeof(NoiseStrengthBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&NoiseBufferDesc,
+				nullptr,
+				&m_noiseBuffer
+			)
+		);
 		});
 
 	// Once both shaders are loaded, create the mesh.
-	auto execPipelines = (createPipeline03_PSTask && createPipeline03_DSTask && createPipeline03_HSTask && createPipeline03_VSTask).then([this]() {
+	auto execPipelines = (createPipeline03_PSTask && createPipeline03_DSTask01 && createPipeline03_DSTask02 && createPipeline03_HSTask && createPipeline03_VSTask).then([this]() {
 		
 		// Cube geometry
 
@@ -394,12 +431,14 @@ void P03_Explicit::ReleaseDeviceDependentResources()
 	m_inputLayout.Reset();
 	m_vertexShader.Reset();
 	m_hullShader.Reset();
-	m_domainShader.Reset();
+	m_domainShader01.Reset();
+	m_domainShader02.Reset();
 	m_pixelShader.Reset();
 	m_mvpBuffer.Reset();
 	m_cameraBuffer.Reset();
 	m_timeBuffer.Reset();
-	m_resolutionBuffer.Reset();
+	m_tessellationBuffer.Reset();
+	m_noiseBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
@@ -442,6 +481,15 @@ void P03_Explicit::ProcessInput(DX::StepTimer const& timer)
 		if (m_tessellationFactor < 64.0f) m_tessellationFactor += 1.0f;
 	}
 
+	if (IsKeyPressed(VirtualKey::N))
+	{
+		if (m_noiseStrength > 0.0f) m_noiseStrength -= 0.01f;
+	}
+
+	if (IsKeyPressed(VirtualKey::M))
+	{
+		if (m_noiseStrength < 1.0f) m_noiseStrength += 0.01f;
+	}
 }
 
 bool P03_Explicit::IsKeyPressed(VirtualKey key)

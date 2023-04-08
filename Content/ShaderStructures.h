@@ -35,6 +35,12 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		DirectX::XMFLOAT3 padding;
 	};
 
+	struct NoiseStrengthBuffer
+	{
+		float noiseStrength;
+		DirectX::XMFLOAT3 padding;
+	};
+
 	// Used to send per-vertex data to the vertex shader.
 	
 	struct VertexPosition

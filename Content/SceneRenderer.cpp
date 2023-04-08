@@ -12,7 +12,7 @@ using namespace Microsoft::WRL;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources),
-	m_isExplicitMode(false)
+	m_isExplicitMode(true)
 {
 	// Create device independent resources
 	ComPtr<IDWriteTextFormat> textFormat;
@@ -106,9 +106,25 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 	// Update display text.
 	uint32 fps = timer.GetFramesPerSecond();
 
-	std::wstring guiHead = L"***********************\n* Simulation Controls *\n***********************\n\n";
+	std::wstring guiHead1 = L"Simulation Controls: ";
 
-	std::wstring guiText =
+	std::wstring guiHead2 = L"Debug info.:\n\n";
+
+	std::wstring guiContext1 =
+
+		L"\n\nSV_TessFactor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) +
+		L"\npress < or > to adjust tessellation factor" +
+		L"\n\nNoise Scale: " + std::to_wstring(m_p03_Explicit->GetNoiseStrength()) + 
+		L"\npress N or M to adjust noise strength"
+
+		L"\n\n'r': enable wireframe mode" +
+		L"\n\n'e': render only explicit geometry" +
+		L"\n\n't': toggle theme" +
+		L"\n\n'c': show camera position (for. debug purpose)" +
+		L"\n\n'h': hide controls\n\n\n\n\n";
+
+
+	std::wstring guiContext2 =
 
 		(fps > 0) ?
 
@@ -116,21 +132,10 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 		L"\n\nCamera position:\n[" +
 		std::to_wstring(m_camera->GetPosition().x) + L"," +
 		std::to_wstring(m_camera->GetPosition().y) + L"," +
-		std::to_wstring(m_camera->GetPosition().z) + L"]" +
-
-		L"\n\nSV_TessFactor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) +
-		L"\npress < or > to adjust tessellation factor" +
-		L"\n\nNoise Scale: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor() * 0.3) + //m_noiseScale) +
-		L"\npress [ or ] to adjust noise strength"
-
-		L"\n\n\n'r': enable wireframe mode" +
-		L"\n\n'e': render only explicit geometry" +
-		L"\n\n't': toggle theme" +
-		L"\n\n'h': hide controls\n"
-
+		std::to_wstring(m_camera->GetPosition().z) + L"]"
 		: L" - FPS";
 
-	guiText = guiHead + guiText;
+	std::wstring guiText = guiHead1 + guiContext1 + guiHead2 + guiContext2;
 	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
 		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
@@ -138,7 +143,7 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 			(uint32)guiText.length(),
 			m_textFormat.Get(),
 			1000.0f, // Max width of the input text.
-			100.0f, // Max height of the input text.
+			100.0f,  // Max height of the input text.
 			&textLayout
 		)
 	);

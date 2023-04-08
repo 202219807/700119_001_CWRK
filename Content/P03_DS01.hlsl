@@ -19,11 +19,10 @@ cbuffer TimeConstantBuffer : register(b2)
     float3 padding2;
 }
 
-cbuffer ResolutionConstantBuffer : register(b3)
+cbuffer NoiseConstantBuffer : register(b3)
 {
-    float resolutionY;
-    float resolutionX;
-    float2 padding3;
+    float noiseStrength;
+    float3 padding4;
 }
 
 struct DS_OUTPUT
@@ -65,14 +64,8 @@ DS_OUTPUT main(QuadTessParam input,
 
 	uvPos.x  = radius * sin(theta) * cos(phi);
 	uvPos.y  = radius * sin(theta) * sin(phi);
-    uvPos.z = radius * cos(theta);
-	
-	uvPos.xyz *= noise(uvPos) * 2.5;
-	
-	// Calculate normal
-    //float3 dPosdx = (1.0 / resolutionX) * (uvPos + float3(1.0, 0.0, 0.0)) - (1.0 / resolutionX) * (uvPos - float3(1.0, 0.0, 0.0));
-    //float3 dPosdy = (1.0 / resolutionY) * (uvPos + float3(0.0, 1.0, 0.0)) - (1.0 / resolutionY) * (uvPos - float3(0.0, 1.0, 0.0));
-    //float3 N = normalize(cross(dPosdx, dPosdy));
+    uvPos.z = radius * cos(theta);	
+    uvPos.xz += noise(uvPos) * 2.5 * noiseStrength;
     
 	output.pos = float4(uvPos, 1);
     
@@ -81,11 +74,10 @@ DS_OUTPUT main(QuadTessParam input,
     output.pos = mul(output.pos, projection);
 	
 	// Calculate normal
-    output.normal = normalize(float3(0.0, 0.0, 0.0) - uvPos.xyz);
+    output.normal = normalize(float3(-0.5, 3.0, 4.0) - uvPos.xyz);
 	
 	// Calculate texture coordinate
 	output.texCoord = UV;
 
 	return output;
-
 }

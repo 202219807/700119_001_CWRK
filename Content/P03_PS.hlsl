@@ -26,5 +26,5 @@ float4 main(PS_INPUT input) : SV_TARGET
     float4 textureColor = float4(noiseValue, noiseValue, noiseValue, 1.0);
       
     float3 finalColor = textureColor.xyz * diffuse + specular;
-    return float4(input.normal, 1.0);
+    return float4(input.texCoord, 1.0, 1.0);
 }
