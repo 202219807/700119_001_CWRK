@@ -32,9 +32,7 @@ VS_OUTPUT main(VS_INPUT input)
     // or
     //
     // inPos = mul(float4(10 * inPos.xy, inPos.zw), model);
-    // inPos = mul(inPos, model);
-
-    inPos = mul(inPos, view);
+    // inPos = mul(inPos, view);
     inPos = mul(inPos, projection);
     output.pos = inPos;
     

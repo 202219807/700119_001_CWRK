@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "SceneRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
@@ -45,10 +45,10 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 	m_camera->SetPosition(0.0f, -2.5f, -15.5f);
 	m_camera->SetRotation(0.0f, 0.0f, 0.0f);
 
-	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	//m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
 	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
 	m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
-	m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
+	//m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
 	m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
 
 	DX::ThrowIfFailed(
@@ -64,10 +64,10 @@ void SceneRenderer::CreateDeviceDependentResources()
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 	);
 
-	m_p01_Implicit->CreateDeviceDependentResources();
+	//m_p01_Implicit->CreateDeviceDependentResources();
 	m_p02_Explicit->CreateDeviceDependentResources();
 	m_p03_Explicit->CreateDeviceDependentResources();
-	m_p04_Explicit->CreateDeviceDependentResources();
+	//m_p04_Explicit->CreateDeviceDependentResources();
 	m_p05_Explicit->CreateDeviceDependentResources();
 }
 
@@ -103,12 +103,19 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void SceneRenderer::Update(DX::StepTimer const& timer)
 {
-	std::wstring guiText = 
-		L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) + 
+	std::wstring guiText =
+		L"SV_TessFactor: " + std::to_wstring(m_tessellationFactor) +
 		L"\n Press < and > to adjust tessellation factor" +
-		L"\n\n\n Camera position: \n[" + 
-		std::to_wstring(m_camera->GetPosition().x) + L"," + 
-		std::to_wstring(m_camera->GetPosition().y) + L"," + 
+		L"\n\n\nNoise Scale: " + std::to_wstring(m_tessellationFactor * 0.3)+ //m_noiseScale) +
+		L"\n Press [ and ] to adjust noise strength"
+		
+		L"\n\n\n 'w': Enable wireframe mode" +
+		L"\n\n\n 'e': Render only explicit geometry" +
+		L"\n\n\n 't': Toggle theme" +
+		
+		L"\n\n\n\n\n Camera position: \n[" +
+		std::to_wstring(m_camera->GetPosition().x) + L"," +
+		std::to_wstring(m_camera->GetPosition().y) + L"," +
 		std::to_wstring(m_camera->GetPosition().z) + L"]";
 
 
@@ -134,10 +141,10 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 	ProcessInput(timer);
 
-	m_p01_Implicit->Update(timer);
+	//m_p01_Implicit->Update(timer);
 	m_p02_Explicit->Update(timer);
 	m_p03_Explicit->Update(timer);
-	m_p04_Explicit->Update(timer);
+	//m_p04_Explicit->Update(timer);
 	m_p05_Explicit->Update(timer);
 
 }
@@ -150,9 +157,9 @@ void SceneRenderer::Render()
 	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 	m_camera->GetViewMatrix(viewMatrix);
 
-	m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
-	m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
-	m_p01_Implicit->Render();
+	//m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	//m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	//m_p01_Implicit->Render();
 
 	m_p02_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p02_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
@@ -162,9 +169,9 @@ void SceneRenderer::Render()
 	m_p03_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
 	m_p03_Explicit->Render();
 
-	m_p04_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
-	m_p04_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
-	m_p04_Explicit->Render();
+	//m_p04_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	//m_p04_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	//m_p04_Explicit->Render();
 
 	m_p05_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p05_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
@@ -208,10 +215,10 @@ void SceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteBrush.Reset();
 
-	m_p01_Implicit->ReleaseDeviceDependentResources();
+	//m_p01_Implicit->ReleaseDeviceDependentResources();
 	m_p02_Explicit->ReleaseDeviceDependentResources();
 	m_p03_Explicit->ReleaseDeviceDependentResources();
-	m_p04_Explicit->ReleaseDeviceDependentResources();
+	//m_p04_Explicit->ReleaseDeviceDependentResources();
 	m_p05_Explicit->ReleaseDeviceDependentResources();
 
 }

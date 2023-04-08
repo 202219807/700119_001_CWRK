@@ -46,13 +46,11 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_mvpBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_resolutionBuffer;
 		
 		// System resources for shaders
 		ModelViewProjectionConstantBuffer				m_mvpBufferData;
 		CameraTrackingBuffer							m_cameraBufferData;
 		ElapsedTimeBuffer								m_timeBufferData;
-		ScreenResolutionBuffer							m_resolutionBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

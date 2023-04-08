@@ -88,15 +88,6 @@ void P01_Implicit::CreateDeviceDependentResources()
 			&m_timeBuffer
 		)
 	);
-
-	CD3D11_BUFFER_DESC ResolutionBufferDesc(sizeof(ScreenResolutionBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&ResolutionBufferDesc,
-			nullptr,
-			&m_resolutionBuffer
-		)
-	);
 	});
 
 	// Once both shaders are loaded, create the mesh.
@@ -184,18 +175,6 @@ void P01_Implicit::Update(DX::StepTimer const& timer)
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
 	m_timeBufferData.time = timer.GetTotalSeconds();
-
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	auto viewportWidth = m_deviceResources->GetOutputSize().Width;
-	auto viewportHeight = m_deviceResources->GetOutputSize().Height;
-
-	m_resolutionBufferData.resolutionY = viewportHeight;
-	m_resolutionBufferData.resolutionX = viewportWidth;
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -235,16 +214,6 @@ void P01_Implicit::Render()
 		0,
 		NULL,
 		&m_timeBufferData,
-		0,
-		0,
-		0
-	);
-
-	context->UpdateSubresource1(
-		m_resolutionBuffer.Get(),
-		0,
-		NULL,
-		&m_resolutionBufferData,
 		0,
 		0,
 		0
@@ -346,14 +315,6 @@ void P01_Implicit::Render()
 		nullptr
 	);
 
-	context->PSSetConstantBuffers1(
-		3,
-		1,
-		m_resolutionBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
 	// Attach our pixel shader.
 	context->PSSetShader(
 		m_pixelShader.Get(),
@@ -378,7 +339,6 @@ void P01_Implicit::ReleaseDeviceDependentResources()
 	m_mvpBuffer.Reset();
 	m_cameraBuffer.Reset();
 	m_timeBuffer.Reset();
-	m_resolutionBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }

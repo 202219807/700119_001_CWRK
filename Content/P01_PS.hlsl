@@ -1,6 +1,6 @@
 #include "MathUtils.hlsli"
 
-static const int MAX_MARCHING_STEPS = 255;
+static const int   MAX_MARCHING_STEPS = 255;
 static const float MIN_DIST = 1.0;
 static const float MAX_DIST = 50.0;
 static const float EPSILON = 0.0001;
@@ -22,13 +22,6 @@ cbuffer TimeConstantBuffer : register(b2)
 {
     float time;
     float3 padding2;
-}
-
-cbuffer ResolutionConstantBuffer : register(b3)
-{
-    float resolutionY;
-    float resolutionX;
-    float2 padding3;
 }
 
 struct PS_INPUT
@@ -275,7 +268,7 @@ HitObject RayMarching(Ray ray, float start, float end)
         {
             if (dist.y == 4.5)
             {
-                // Bubble refraction.
+                // Bubble refraction based on https://www.shadertoy.com/view/WtfyWj
                 ray.d = refract(ray.d, EstimateNormal(ray.o + depth * ray.d) * sign(outside), 1.0);
                 outside *= -1.0;
                 continue;
@@ -462,7 +455,7 @@ float4 main(PS_INPUT input) : SV_Target
 
     // Transform viewDir using the inverse view matrix
     float4x4 viewTrans = transpose(view);
-    ray.d = viewDir.x * viewTrans._11_12_13 + viewDir.y * viewTrans._21_22_23
+    ray.d = viewDir.x * viewTrans._11_12_13 + viewDir.y * viewTrans._21_22_23 
         + viewDir.z * viewTrans._31_32_33;
     
     float4 fragColor;

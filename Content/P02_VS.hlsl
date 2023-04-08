@@ -43,7 +43,7 @@ VS_OUTPUT main(VS_INPUT input)
 
 	inPos.xyz *= 5.0;
 	inPos.z -= 10.0;
-	inPos.y -= 2.0;
+	inPos.y += 20.0;
 	inPos.x += 20.0;
 
 	inPos = mul(inPos, view);
