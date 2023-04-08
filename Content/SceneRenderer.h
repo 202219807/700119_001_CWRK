@@ -53,7 +53,7 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		DWRITE_TEXT_METRICS									m_textMetrics;
 
 		// Variables used with the rendering loop.
-		float												m_tessellationFactor;
+		bool												m_isExplicitMode;
 	};
 }
 

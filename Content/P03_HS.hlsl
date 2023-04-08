@@ -1,5 +1,11 @@
 #define Control_Points 4
 
+cbuffer TessellationFactorBuffer : register(b0)
+{
+	float tessellationFactor;
+	float3 padding;
+}
+
 struct HS_INPUT
 {
 	float4 pos		: SV_POSITION;
@@ -21,7 +27,7 @@ QuadTessFactors CalcHSPatchConstants(
 	uint PatchID : SV_PrimitiveID)
 {
 	QuadTessFactors Output;
-	float TessAmount = 50;
+	float TessAmount = tessellationFactor;
 	Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = Output.Edges[3] = TessAmount;
 	Output.Inside[0] = Output.Inside[1] = TessAmount;
 	return Output;

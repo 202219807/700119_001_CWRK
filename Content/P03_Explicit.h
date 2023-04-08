@@ -29,6 +29,9 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 	private:
 		void ProcessInput(DX::StepTimer const& timer);
 		bool IsKeyPressed(VirtualKey key);
+	
+	public:
+		float GetTessellationFactor() { return m_tessellationFactor; }
 
 	private:
 		// Cached pointer to device resources.
@@ -53,15 +56,18 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_resolutionBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_tessellationBuffer;
 
-		// System resources for cube geometry.
+		// System resources for geometry.
 		ModelViewProjectionConstantBuffer				m_mvpBufferData;
 		CameraTrackingBuffer							m_cameraBufferData;
 		ElapsedTimeBuffer								m_timeBufferData;
 		ScreenResolutionBuffer							m_resolutionBufferData;
+		TessellationFactorBuffer						m_tessellationBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.
+		float											m_tessellationFactor;
 		bool											m_loadingComplete;
 		bool											m_isWireframe;
 

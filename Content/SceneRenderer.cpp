@@ -11,8 +11,8 @@ using namespace Microsoft::WRL;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-	m_tessellationFactor(31.0f),
-	m_deviceResources(deviceResources)
+	m_deviceResources(deviceResources),
+	m_isExplicitMode(false)
 {
 	// Create device independent resources
 	ComPtr<IDWriteTextFormat> textFormat;
@@ -45,7 +45,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 	m_camera->SetPosition(0.0f, -2.5f, -15.5f);
 	m_camera->SetRotation(0.0f, 0.0f, 0.0f);
 
-	//m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
 	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
 	m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
 	//m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
@@ -64,7 +64,7 @@ void SceneRenderer::CreateDeviceDependentResources()
 		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
 	);
 
-	//m_p01_Implicit->CreateDeviceDependentResources();
+	m_p01_Implicit->CreateDeviceDependentResources();
 	m_p02_Explicit->CreateDeviceDependentResources();
 	m_p03_Explicit->CreateDeviceDependentResources();
 	//m_p04_Explicit->CreateDeviceDependentResources();
@@ -112,20 +112,20 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 		(fps > 0) ?
 
-		std::to_wstring(fps) + L" FPS" + 
+		std::to_wstring(fps) + L" FPS" +
 		L"\n\nCamera position:\n[" +
 		std::to_wstring(m_camera->GetPosition().x) + L"," +
 		std::to_wstring(m_camera->GetPosition().y) + L"," +
-		std::to_wstring(m_camera->GetPosition().z) + L"]" + 
+		std::to_wstring(m_camera->GetPosition().z) + L"]" +
 
-		L"\n\nSV_TessFactor: " + std::to_wstring(m_tessellationFactor) +
+		L"\n\nSV_TessFactor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) +
 		L"\npress < or > to adjust tessellation factor" +
-		L"\n\nNoise Scale: " + std::to_wstring(m_tessellationFactor * 0.3) + //m_noiseScale) +
+		L"\n\nNoise Scale: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor() * 0.3) + //m_noiseScale) +
 		L"\npress [ or ] to adjust noise strength"
 
 		L"\n\n\n'r': enable wireframe mode" +
 		L"\n\n'e': render only explicit geometry" +
-		L"\n\n't': toggle theme" + 
+		L"\n\n't': toggle theme" +
 		L"\n\n'h': hide controls\n"
 
 		: L" - FPS";
@@ -169,9 +169,12 @@ void SceneRenderer::Render()
 	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
 	m_camera->GetViewMatrix(viewMatrix);
 
-	//m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
-	//m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
-	//m_p01_Implicit->Render();
+	if (!m_isExplicitMode)
+	{
+		m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+		m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+		m_p01_Implicit->Render();
+	}
 
 	m_p02_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
 	m_p02_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
@@ -227,7 +230,7 @@ void SceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_whiteBrush.Reset();
 
-	//m_p01_Implicit->ReleaseDeviceDependentResources();
+	m_p01_Implicit->ReleaseDeviceDependentResources();
 	m_p02_Explicit->ReleaseDeviceDependentResources();
 	m_p03_Explicit->ReleaseDeviceDependentResources();
 	//m_p04_Explicit->ReleaseDeviceDependentResources();
@@ -287,21 +290,12 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 		m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
 	}
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_PERIOD)))
+	if (IsKeyPressed(VirtualKey::E))
 	{
-		if (m_tessellationFactor > 1.0f)
-		{
-			m_tessellationFactor -= 1.0f;
-		}
+		m_isExplicitMode = !m_isExplicitMode;
 	}
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_COMMA)))
-	{
-		if (m_tessellationFactor < 64.0f)
-		{
-			m_tessellationFactor += 1.0f;
-		}
-	}
+
 }
 
 bool SceneRenderer::IsKeyPressed(VirtualKey key)

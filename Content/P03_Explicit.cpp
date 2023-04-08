@@ -7,12 +7,12 @@ using namespace _202219807_ACW_700119_D3D11_UWP_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
-//using namespace Microsoft::WRL;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 P03_Explicit::P03_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_isWireframe(false),
+	m_tessellationFactor(31.0f),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
 {
@@ -25,6 +25,7 @@ void P03_Explicit::Update(DX::StepTimer const& timer)
 	ProcessInput(timer);
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 	m_timeBufferData.time = timer.GetTotalSeconds();
+	m_tessellationBufferData.tessellationFactor = m_tessellationFactor;
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -79,6 +80,15 @@ void P03_Explicit::Render()
 		0
 	);
 
+	context->UpdateSubresource1(
+		m_tessellationBuffer.Get(),
+		0,
+		NULL,
+		&m_tessellationBufferData,
+		0,
+		0,
+		0
+	);
 
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColor);
@@ -114,6 +124,14 @@ void P03_Explicit::Render()
 		m_hullShader.Get(),
 		nullptr,
 		0
+	);
+
+	context->HSSetConstantBuffers1(
+		0,
+		1,
+		m_tessellationBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
 	);
 
 	// Attach our domain shader.
@@ -254,7 +272,6 @@ void P03_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-
 		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
@@ -263,7 +280,6 @@ void P03_Explicit::CreateDeviceDependentResources()
 				&m_cameraBuffer
 			)
 		);
-
 
 		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
@@ -280,6 +296,15 @@ void P03_Explicit::CreateDeviceDependentResources()
 				&ResolutionBufferDesc,
 				nullptr,
 				&m_resolutionBuffer
+			)
+		);
+
+		CD3D11_BUFFER_DESC TessellationBufferDesc(sizeof(TessellationFactorBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&TessellationBufferDesc,
+				nullptr,
+				&m_tessellationBuffer
 			)
 		);
 		});
@@ -396,12 +421,25 @@ void P03_Explicit::ProcessInput(DX::StepTimer const& timer)
 	if (IsKeyPressed(VirtualKey::R))
 	{
 		m_isWireframe = !m_isWireframe;
+
 		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-		auto device = m_deviceResources->GetD3DDevice();
 		rasterizerDesc.CullMode = D3D11_CULL_NONE;
+
 		if (m_isWireframe) rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
 		else  rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+
+		auto device = m_deviceResources->GetD3DDevice();
 		device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
+	}
+
+	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_COMMA)))
+	{
+		if (m_tessellationFactor > 1.0f) m_tessellationFactor -= 1.0f;
+	}
+
+	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_PERIOD)))
+	{
+		if (m_tessellationFactor < 64.0f) m_tessellationFactor += 1.0f;
 	}
 
 }
