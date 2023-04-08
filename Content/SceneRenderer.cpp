@@ -153,7 +153,7 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 	ProcessInput(timer);
 
-	//m_p01_Implicit->Update(timer);
+	m_p01_Implicit->Update(timer);
 	m_p02_Explicit->Update(timer);
 	m_p03_Explicit->Update(timer);
 	//m_p04_Explicit->Update(timer);
