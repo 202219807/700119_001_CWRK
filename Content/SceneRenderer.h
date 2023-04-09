@@ -54,6 +54,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 
 		// Variables used with the rendering loop.
 		bool												m_isExplicitMode;
+		bool												m_isDebugMode;
+		bool												m_showControls;
 	};
 }
 

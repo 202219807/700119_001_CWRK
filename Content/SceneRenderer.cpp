@@ -12,7 +12,9 @@ using namespace Microsoft::WRL;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources),
-	m_isExplicitMode(true)
+	m_isExplicitMode(true),
+	m_isDebugMode(false),
+	m_showControls(false)
 {
 	// Create device independent resources
 	ComPtr<IDWriteTextFormat> textFormat;
@@ -135,7 +137,10 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 		std::to_wstring(m_camera->GetPosition().z) + L"]"
 		: L" - FPS";
 
-	std::wstring guiText = guiHead1 + guiContext1 + guiHead2 + guiContext2;
+	std::wstring guiText = L"Press 'h' for help";
+	if (m_showControls) guiText = guiHead1 + guiContext1;
+	if (m_isDebugMode && m_showControls) guiText = guiHead1 + guiContext1 + guiHead2 + guiContext2;
+	
 	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
 		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
@@ -245,6 +250,21 @@ void SceneRenderer::ReleaseDeviceDependentResources()
 
 void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 {
+	if (IsKeyPressed(VirtualKey::E))
+	{
+		m_isExplicitMode = !m_isExplicitMode;
+	}
+
+	if (IsKeyPressed(VirtualKey::H))
+	{
+		m_showControls = !m_showControls;
+	}
+
+	if (IsKeyPressed(VirtualKey::C))
+	{
+		m_isDebugMode = !m_isDebugMode;
+	}
+
 	if (IsKeyPressed(VirtualKey::W))
 	{
 		m_camera->MoveForward(10.0f * timer.GetElapsedSeconds());
@@ -294,13 +314,6 @@ void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 	{
 		m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
 	}
-
-	if (IsKeyPressed(VirtualKey::E))
-	{
-		m_isExplicitMode = !m_isExplicitMode;
-	}
-
-
 }
 
 bool SceneRenderer::IsKeyPressed(VirtualKey key)
@@ -310,4 +323,5 @@ bool SceneRenderer::IsKeyPressed(VirtualKey key)
 
 	if ((currentKeyState & keyDownState) == keyDownState) return true;
 	return false;
+
 }
