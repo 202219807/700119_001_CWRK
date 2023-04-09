@@ -51,20 +51,33 @@ DS_OUTPUT main(QuadTessParam input,
 	float2 UV : SV_DomainLocation)
 {
     DS_OUTPUT output;
+	
+    float3 vPos1 = (1.0 - UV.y) * QuadPos[0].xyz + UV.y * QuadPos[1].xyz;
+    float3 vPos2 = (1.0 - UV.y) * QuadPos[2].xyz + UV.y * QuadPos[3].xyz;
+	
+    float3 uvPos = (1.0 - UV.x) * vPos1 + UV.x * vPos2;
+
+	// Transformations	
+    float radius = 10.0; //0.3;
+    float phi = UV.y * 2 * 3.14159265358979323846;
+    float theta = UV.x * 3.14159265358979323846;
+
+    uvPos.x = radius * sin(theta) * cos(phi);
+    uvPos.y = radius * sin(theta) * sin(phi);
+    uvPos.z = radius * cos(theta);
+    uvPos.yz += noise(uvPos) * 2.5 * noiseStrength;
     
-    // Calculate the position of the current vertex within the quad
-    float3 position = lerp(lerp(QuadPos[0], QuadPos[1], UV.y),
-                           lerp(QuadPos[2], QuadPos[3], UV.y),
-                           UV.x);
+    output.pos = float4(uvPos - float3(50.0, 0.0, 0.0), 1);
     
-    // Extrude the vertex outward along its normal direction to create the spikes
-    float3 normal = normalize(cross(ddx(position), ddy(position))); // calculate the normal
-    float noise = noiseStrength * noise(position.xyz * 10.0f + time); // calculate the noise value
-    position += normal * noise; // extrude the vertex outward along the normal direction
-    
-    output.pos = mul(mul(mul(float4(position, 1), model), view), projection); // transform the position to clip space
-    output.texCoord = UV; // pass through the texture coordinates
-    output.normal = normal; // pass through the normal
-    
+	// output.pos = mul(output.pos, model);
+    output.pos = mul(output.pos, view);
+    output.pos = mul(output.pos, projection);
+	
+	// Calculate normal
+    output.normal = normalize(float3(-0.5, 3.0, 4.0) - uvPos.xyz);
+	
+	// Calculate texture coordinate
+    output.texCoord = UV;
+
     return output;
 }

@@ -248,7 +248,7 @@ void P02_Explicit::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST); //D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ //D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ
 
 	context->IASetInputLayout(m_inputLayout.Get());
 

@@ -1,11 +1,11 @@
 struct PS_INPUT
 {
-	float4 pos		: SV_POSITION;
-	float3 color	: COLOR0;
+    float4 pos : SV_POSITION;
+    float3 color : COLOR0;
+    //float3 normal : TEXCOORD0;
 };
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	float4 color = float4(input.color, 1.0f);
-	return color;
+    return float4(input.color, 1.0);
 }
