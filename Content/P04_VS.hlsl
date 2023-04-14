@@ -19,6 +19,7 @@ VS_OUTPUT main(VS_INPUT input)
     output.pos = float4(input.pos, 1.0);
     output.pos.z -= 20;
     output.pos.y -= 4;
+    output.pos.x -= 20;
     output.color = float4(input.color, 1.0);
     output.normal = input.normal;
 

@@ -47,7 +47,7 @@ VS_OUTPUT main(VS_INPUT input)
     // Placement
     inPos.xyz *= 5.0;
     inPos.z -= 10.0;
-    inPos.y += 20.0;
+    inPos.y += 10.0;
     inPos.x += 20.0;
 
     // Projection

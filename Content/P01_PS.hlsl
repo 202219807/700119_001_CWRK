@@ -1,9 +1,9 @@
 #include "MathUtils.hlsli"
 
 static const int   MAX_MARCHING_STEPS = 255;
-static const float MIN_DIST = 1.0;
-static const float MAX_DIST = 50.0;
-static const float EPSILON = 0.0001;
+static const float MIN_DIST = 0.1;
+static const float MAX_DIST = 50.0; 
+static const float EPSILON  = 0.003;
 
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
@@ -144,9 +144,9 @@ float CoralSDF(float3 p)
     float3 zn = float3(p.xyz);
     float radius = 0.0;
     float hit = 0.0;
-    float n = 10; //9; //12;
+    float n = 12; //9; //12;
     float d = 2.0;
-    for (int i = 0; i < 18; i++) // 12;
+    for (int i = 0; i < 12; i++) // 12; //18
     {
         radius = sqrt(dot(zn, zn));
         if (radius > 2.0)
@@ -406,8 +406,8 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
 {
     HitObject hObj = RayMarching(ray, MIN_DIST, MAX_DIST);
     float3 lightPos = float3(-1.0, 10.0, 1.0);
-    float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
-    //float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
+    //float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
+    float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
     float3 pixelColor = deepColor;
     
     float3 p = ray.o + hObj.d * ray.d;
@@ -418,14 +418,14 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
         
         // Lighting
         float shininess = 10.0;
-        float3 K_a = float3(0.2, 0.2, 0.2);
+        float3 K_a = float3(0.1, 0.1, 0.1);
         float3 K_d = float3(0.2, 0.2, 0.2);
-        float3 K_s = float3(1.0, 1.0, 1.0);
+        float3 K_s = float3(0.2, 0.2, 0.2);
         pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor; // review
     }
     
     // Post processing
-    float scale = 3.0; // For aqua shade 0.9; // For deep shade 2.0;
+    float scale = 2.5; // For aqua shade 0.9; // For deep shade 3.0;
     
     // Fog
     float fog = clamp(pow(hObj.d / MAX_DIST * scale, 1.5), 0.0, 1.0);
