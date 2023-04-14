@@ -1,78 +1,61 @@
+#include "MathUtils.hlsli"
+
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
     matrix model;
     matrix view;
     matrix projection;
-    float4 timer;
-    float4 resolution;
-    float4 eye;
 };
 
-struct VertexShaderInput
+cbuffer CameraConstantBuffer : register(b1)
 {
-    float3 pos      : POSITION;
-    float3 color    : COLOR0;
+    float3 cameraPosition;
+    float padding;
 };
 
-struct GeometryShaderInput
+cbuffer TimeConstantBuffer : register(b2)
 {
-    float4 pos      : SV_POSITION;
-    float3 color    : COLOR0;
+    float elapsedTime;
+    float3 padding2;
 };
 
-static float time = timer.x;
-
-float3 GradientShade(float3 position)
+struct VS_INPUT
 {
-    // Define the start and end colors of the gradient
-    float3 startColor = float3(0.0, 1.0, 1.0); // Blue
-    float3 endColor = float3(1.0, 0.0, 0.0);   // Yellow
+    float3 pos : POSITION;
+    float3 color : COLOR0;
+};
 
-    // Calculate the position's distance from the origin
-    float distance = length(position);
-
-    // Normalize the position vector to get a value between 0 and 1
-    float t = saturate(dot(normalize(position), normalize(float3(-1.0, 1.0, 0.0))));
-
-    // Add variation to the colors
-    float3 colorVariationVector = sin(position * 0.6);
-    startColor += colorVariationVector;
-    endColor += colorVariationVector;
-
-    // Interpolate between the start and end colors based on the distance
-    return lerp(startColor, endColor, t);
-}
-
-GeometryShaderInput main(VertexShaderInput input)
+struct VS_OUTPUT
 {
-    GeometryShaderInput output;
+    float4 pos : SV_POSITION;
+    float3 color : COLOR0;
+    // float3 normal : TEXCOORD1;
+};
+
+VS_OUTPUT main(VS_INPUT input)
+{
+    VS_OUTPUT output;
 
     float4 inPos = float4(input.pos, 1.0);
 
-    // Transformations
-    // inPos.xyz *= 0.5;
-    
-    inPos.z -= 15.0;
-    inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
-    
-    // Create the rotation matrix
-    float c = cos(time * 0.1);
-    float s = sin(time * 0.1);
-    float4x4 rotationMatrix = float4x4(
-        c, 0, -s, 0,
-        0, 1, 0, 0,
-        s, 0, c, 0,
-        0, 0, 0, 1
-    );
+	// Transformations
+    float r = 1.0f;
+    inPos.x = r * sin(input.pos.y) * cos(input.pos.x);
+    inPos.y = r * sin(input.pos.y) * sin(input.pos.x) - 2.0;
+    inPos.z = r * cos(input.pos.y * sin(elapsedTime * 0.5));
 
-    inPos = mul(inPos, rotationMatrix);
+    // Placement
+    inPos.xyz *= 5.0;
+    inPos.z -= 10.0;
+    inPos.y += 10.0;
+    inPos.x += 20.0;
 
-    //inPos = mul(inPos, model);
-    //inPos = mul(inPos, view);
-    //inPos = mul(inPos, projection);
+    // Projection
+    inPos = mul(inPos, view);
+    inPos = mul(inPos, projection);
+
     output.pos = inPos;
-
-    output.color = GradientShade(output.pos);
+    output.color = input.color; //float3(0.96, 0.48, 0.10);
 
     return output;
 }

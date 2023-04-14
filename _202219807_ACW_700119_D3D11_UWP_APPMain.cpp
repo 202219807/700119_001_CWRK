@@ -17,14 +17,10 @@ _202219807_ACW_700119_D3D11_UWP_APPMain::_202219807_ACW_700119_D3D11_UWP_APPMain
 	// TODO: Replace this with your app's content initialization.
 	m_sceneRenderer = std::unique_ptr<SceneRenderer>(new SceneRenderer(m_deviceResources));
 
-	m_fpsTextRenderer = std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
-
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
-	// e.g. for 60 FPS fixed timestep update logic, call:
-	
+	// e.g. for 60 FPS fixed timestep update logic, call:	
 	m_timer.SetFixedTimeStep(true);
 	m_timer.SetTargetElapsedSeconds(1.0 / 60);
-	
 }
 
 _202219807_ACW_700119_D3D11_UWP_APPMain::~_202219807_ACW_700119_D3D11_UWP_APPMain()
@@ -48,7 +44,6 @@ void _202219807_ACW_700119_D3D11_UWP_APPMain::Update()
 	{
 		// TODO: Replace this with your app's content update functions.
 		m_sceneRenderer->Update(m_timer);
-		m_fpsTextRenderer->Update(m_timer);
 	});
 }
 
@@ -73,13 +68,12 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 	context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
 
 	// Clear the back buffer and depth stencil view.
-	context->ClearRenderTargetView(m_deviceResources->GetBackBufferRenderTargetView(), DirectX::Colors::CornflowerBlue);
+	context->ClearRenderTargetView(m_deviceResources->GetBackBufferRenderTargetView(), DirectX::Colors::Black);
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
 	m_sceneRenderer->Render();
-	m_fpsTextRenderer->Render();
 
 	return true;
 }
@@ -88,13 +82,11 @@ bool _202219807_ACW_700119_D3D11_UWP_APPMain::Render()
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
 	m_sceneRenderer->ReleaseDeviceDependentResources();
-	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
 // Notifies renderers that device resources may now be recreated.
 void _202219807_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
 	m_sceneRenderer->CreateDeviceDependentResources();
-	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }

@@ -23,21 +23,9 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClInclude Include="Content\SceneRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\FpsTextRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\ShaderStructures.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClCompile Include="Content\SceneRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\FpsTextRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
@@ -56,16 +44,76 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
+    <Filter Include="Content\Graphic Pipelines">
+      <UniqueIdentifier>{f84090fa-506b-4551-8f00-709add120af2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Graphic Pipelines\P01">
+      <UniqueIdentifier>{38cc05e3-8883-4642-9207-aba971e22e33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Graphic Pipelines\P02">
+      <UniqueIdentifier>{e5a36690-3147-4a6a-8914-2d5edcc2b990}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Graphic Pipelines\P03">
+      <UniqueIdentifier>{9254479c-8259-4c5a-84a6-0154014543ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Graphic Pipelines\P04">
+      <UniqueIdentifier>{a02d99ec-90da-4857-916b-2ea6b7e6518f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Graphic Pipelines\P05">
+      <UniqueIdentifier>{168d6093-0f5e-4937-904d-172d072fad02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="_202219807_ACW_700119_D3D11_UWP_APPMain.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Content\SceneRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P01_Implicit.cpp">
+      <Filter>Content\Graphic Pipelines\P01</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P02_Explicit.cpp">
+      <Filter>Content\Graphic Pipelines\P02</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P03_Explicit.cpp">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P04_Explicit.cpp">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\P05_Explicit.cpp">
+      <Filter>Content\Graphic Pipelines\P05</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\Camera.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="_202219807_ACW_700119_D3D11_UWP_APPMain.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Content\SceneRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P01_Implicit.h">
+      <Filter>Content\Graphic Pipelines\P01</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P02_Explicit.h">
+      <Filter>Content\Graphic Pipelines\P02</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P03_Explicit.h">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P04_Explicit.h">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\P05_Explicit.h">
+      <Filter>Content\Graphic Pipelines\P05</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\Camera.h">
+      <Filter>Content</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -77,25 +125,54 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\P01_PS.hlsl">
-      <Filter>Content</Filter>
+      <Filter>Content\Graphic Pipelines\P01</Filter>
     </FxCompile>
     <FxCompile Include="Content\P01_VS.hlsl">
-      <Filter>Content</Filter>
+      <Filter>Content\Graphic Pipelines\P01</Filter>
     </FxCompile>
     <FxCompile Include="Content\P02_PS.hlsl">
-      <Filter>Content</Filter>
+      <Filter>Content\Graphic Pipelines\P02</Filter>
     </FxCompile>
     <FxCompile Include="Content\P02_VS.hlsl">
-      <Filter>Content</Filter>
+      <Filter>Content\Graphic Pipelines\P02</Filter>
     </FxCompile>
-    <FxCompile Include="Content\P02_GS.hlsl">
-      <Filter>Content</Filter>
+    <FxCompile Include="Content\P03_DS01.hlsl">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
     </FxCompile>
-    <FxCompile Include="Content\P03_VS.hlsl">
-      <Filter>Content</Filter>
+    <FxCompile Include="Content\P03_HS.hlsl">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
     </FxCompile>
     <FxCompile Include="Content\P03_PS.hlsl">
-      <Filter>Content</Filter>
+      <Filter>Content\Graphic Pipelines\P03</Filter>
     </FxCompile>
+    <FxCompile Include="Content\P03_VS.hlsl">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_GS.hlsl">
+      <Filter>Content\Graphic Pipelines\P05</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_PS.hlsl">
+      <Filter>Content\Graphic Pipelines\P05</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P05_VS.hlsl">
+      <Filter>Content\Graphic Pipelines\P05</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P04_GS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P04_PS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P04_VS.hlsl">
+      <Filter>Content\Graphic Pipelines\P04</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\P03_DS02.hlsl">
+      <Filter>Content\Graphic Pipelines\P03</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Content\MathUtils.hlsli">
+      <Filter>Content</Filter>
+    </None>
   </ItemGroup>
 </Project>
