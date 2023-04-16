@@ -457,7 +457,7 @@ void P03_Explicit::SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosi
 
 void P03_Explicit::ProcessInput(DX::StepTimer const& timer)
 {
-	if (IsKeyPressed(VirtualKey::R))
+	if (IsKeyPressed(VirtualKey::F4))
 	{
 		m_isWireframe = !m_isWireframe;
 
@@ -471,25 +471,13 @@ void P03_Explicit::ProcessInput(DX::StepTimer const& timer)
 		device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
 	}
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_COMMA)))
-	{
-		if (m_tessellationFactor > 1.0f) m_tessellationFactor -= 1.0f;
-	}
+	if (IsKeyPressed(VirtualKey::F5)) if (m_tessellationFactor > 1.0f) m_tessellationFactor -= 1.0f;
 
-	if (IsKeyPressed(static_cast<VirtualKey>(VK_OEM_PERIOD)))
-	{
-		if (m_tessellationFactor < 64.0f) m_tessellationFactor += 1.0f;
-	}
+	if (IsKeyPressed(VirtualKey::F6)) if (m_tessellationFactor < 64.0f) m_tessellationFactor += 1.0f;
 
-	if (IsKeyPressed(VirtualKey::N))
-	{
-		if (m_noiseStrength > 0.0f) m_noiseStrength -= 0.01f;
-	}
+	if (IsKeyPressed(VirtualKey::F7)) if (m_noiseStrength > 0.0f) m_noiseStrength -= 0.01f;
 
-	if (IsKeyPressed(VirtualKey::M))
-	{
-		if (m_noiseStrength < 1.0f) m_noiseStrength += 0.01f;
-	}
+	if (IsKeyPressed(VirtualKey::F8)) if (m_noiseStrength < 1.0f) m_noiseStrength += 0.01f;
 }
 
 bool P03_Explicit::IsKeyPressed(VirtualKey key)

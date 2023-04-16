@@ -12,7 +12,7 @@ using namespace Microsoft::WRL;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources),
-	m_isExplicitMode(false),
+	m_isExplicitMode(true),
 	m_isDebugMode(false),
 	m_showControls(false)
 {
@@ -110,34 +110,22 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 
 	std::wstring guiHead1 = L"Simulation Controls: ";
 
-	std::wstring guiHead2 = L"Debug info.:\n\n";
+	std::wstring guiHead2 = L"Debug info:\n\n ";
 
-	std::wstring guiContext1 =
+	std::wstring guiContext1 = L"\n\n F1 : Help\n\n F2 : Debug info\n\n F3 : Render only explicit geometry\n\n F4 : Enable wireframe mode\n\n F5 : Decrease tessellation factor\n\n F6 : Increase tessellation factor\n\n F7 : Decrease noise strength\n\n F8 : Increase noise strength\n\n F9 : Day theme\n\n F10 : Night theme\n\n\n ";
 
-		L"\n\nSV_TessFactor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) +
-		L"\npress < or > to adjust tessellation factor" +
-		L"\n\nNoise Scale: " + std::to_wstring(m_p03_Explicit->GetNoiseStrength()) + 
-		L"\npress N or M to adjust noise strength"
-
-		L"\n\n'r': enable wireframe mode" +
-		L"\n\n'e': render only explicit geometry" +
-		L"\n\n't': toggle theme" +
-		L"\n\n'c': show camera position (for. debug purpose)" +
-		L"\n\n'h': hide controls\n\n\n\n\n";
-
-
-	std::wstring guiContext2 =
-
-		(fps > 0) ?
+	std::wstring guiContext2 =	(fps > 0) ?
 
 		std::to_wstring(fps) + L" FPS" +
-		L"\n\nCamera position:\n[" +
+		L"\n\n Camera position:\n [" +
 		std::to_wstring(m_camera->GetPosition().x) + L"," +
 		std::to_wstring(m_camera->GetPosition().y) + L"," +
-		std::to_wstring(m_camera->GetPosition().z) + L"]"
+		std::to_wstring(m_camera->GetPosition().z) + L"]" +
+		L"\n\n Tessellation factor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) + 
+		L"\n\n Noise strength: " + std::to_wstring(m_p03_Explicit->GetNoiseStrength())
 		: L" - FPS";
 
-	std::wstring guiText = L"Press 'h' for help";
+	std::wstring guiText = L"Press 'F1' to view simulation controls";
 	if (m_showControls) guiText = guiHead1 + guiContext1;
 	if (m_isDebugMode && m_showControls) guiText = guiHead1 + guiContext1 + guiHead2 + guiContext2;
 	
@@ -145,7 +133,7 @@ void SceneRenderer::Update(DX::StepTimer const& timer)
 	DX::ThrowIfFailed(
 		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
 			guiText.c_str(),
-			(uint32)guiText.length(),
+			static_cast<uint32>(guiText.length()),
 			m_textFormat.Get(),
 			1000.0f, // Max width of the input text.
 			100.0f,  // Max height of the input text.
@@ -250,70 +238,19 @@ void SceneRenderer::ReleaseDeviceDependentResources()
 
 void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
 {
-	if (IsKeyPressed(VirtualKey::E))
-	{
-		m_isExplicitMode = !m_isExplicitMode;
-	}
-
-	if (IsKeyPressed(VirtualKey::H))
-	{
-		m_showControls = !m_showControls;
-	}
-
-	if (IsKeyPressed(VirtualKey::C))
-	{
-		m_isDebugMode = !m_isDebugMode;
-	}
-
-	if (IsKeyPressed(VirtualKey::W))
-	{
-		m_camera->MoveForward(10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::S))
-	{
-		m_camera->MoveBackward(10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::A))
-	{
-		m_camera->MoveLeft(10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::D))
-	{
-		m_camera->MoveRight(10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Control))
-	{
-		m_camera->AddPositionY(-10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Shift))
-	{
-		m_camera->AddPositionY(10.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Up))
-	{
-		m_camera->AddRotationY(50.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Down))
-	{
-		m_camera->AddRotationY(-50.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Left))
-	{
-		m_camera->AddRotationX(50.0f * timer.GetElapsedSeconds());
-	}
-
-	if (IsKeyPressed(VirtualKey::Right))
-	{
-		m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
-	}
+	if (IsKeyPressed(VirtualKey::F1))		m_showControls = !m_showControls;
+	if (IsKeyPressed(VirtualKey::F2))		m_isDebugMode = !m_isDebugMode;
+	if (IsKeyPressed(VirtualKey::F3))		m_isExplicitMode = !m_isExplicitMode;
+	if (IsKeyPressed(VirtualKey::W))		m_camera->MoveForward(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::S))		m_camera->MoveBackward(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::A))		m_camera->MoveLeft(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::D))		m_camera->MoveRight(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Control))  m_camera->AddPositionY(-10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Shift))	m_camera->AddPositionY(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Up))		m_camera->AddRotationY(50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Down))		m_camera->AddRotationY(-50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Left))		m_camera->AddRotationX(50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Right))	m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
 }
 
 bool SceneRenderer::IsKeyPressed(VirtualKey key)

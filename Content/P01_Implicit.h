@@ -8,12 +8,15 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 {
 	// Graphic Pipeline 01:
 	// 
-	// Implicit modeling with signed distance based ray marching
+	// Implicit modeling with ray marching using signed distance function
 	// 
 	// Ocean surface and underwater effects.
-	// Reflective/Refractive Bubbles.
+	// Reflective wobbly bubbles.
 	// Underwater plantations.
 	// Underwater coral object (Mandelbulb derivate).
+
+	using namespace Windows::System;
+	using namespace Windows::UI::Core;
 
 	class P01_Implicit
 	{
@@ -25,6 +28,10 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render();
+
+	private:
+		void ProcessInput(DX::StepTimer const& timer);
+		bool IsKeyPressed(VirtualKey key);
 
 	private:
 		// Cached pointer to device resources.
@@ -46,12 +53,17 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_mvpBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_lightBuffer;
 		
 		// System resources for shaders
 		ModelViewProjectionConstantBuffer				m_mvpBufferData;
 		CameraTrackingBuffer							m_cameraBufferData;
 		ElapsedTimeBuffer								m_timeBufferData;
+		LightBuffer										m_lightBufferData;
 		uint32											m_indexCount;
+
+		DirectX::XMFLOAT3								m_waterColor;
+		float											m_waterDepth;
 
 		// Variables used with the rendering loop.
 		bool											m_loadingComplete;

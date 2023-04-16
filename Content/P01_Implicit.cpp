@@ -12,9 +12,15 @@ using namespace Windows::Foundation;
 P01_Implicit::P01_Implicit(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
+	m_waterDepth(3.0f),
 	m_deviceResources(deviceResources)
 {
 	CreateDeviceDependentResources();
+
+	XMVECTOR col = XMVectorSet(0.02, 0.08, 0.2, 0.0f);
+	float intensity = 0.1f;
+	XMVECTOR finalCol = XMVectorScale(col, intensity);
+	XMStoreFloat3(&m_waterColor, finalCol);
 }
 
 void P01_Implicit::CreateDeviceDependentResources()
@@ -34,21 +40,21 @@ void P01_Implicit::CreateDeviceDependentResources()
 			)
 		);
 
-	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
 
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateInputLayout(
-			vertexDesc,
-			ARRAYSIZE(vertexDesc),
-			&fileData[0],
-			fileData.size(),
-			&m_inputLayout
-		)
-	);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateInputLayout(
+				vertexDesc,
+				ARRAYSIZE(vertexDesc),
+				&fileData[0],
+				fileData.size(),
+				&m_inputLayout
+			)
+		);
 		});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
@@ -62,33 +68,43 @@ void P01_Implicit::CreateDeviceDependentResources()
 			)
 		);
 
-	CD3D11_BUFFER_DESC MVPBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&MVPBufferDesc,
-			nullptr,
-			&m_mvpBuffer
-		)
-	);
+		CD3D11_BUFFER_DESC MVPBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&MVPBufferDesc,
+				nullptr,
+				&m_mvpBuffer
+			)
+		);
 
-	CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&CameraBufferDesc,
-			nullptr,
-			&m_cameraBuffer
-		)
-	);
+		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&CameraBufferDesc,
+				nullptr,
+				&m_cameraBuffer
+			)
+		);
 
-	CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&TimeBufferDesc,
-			nullptr,
-			&m_timeBuffer
-		)
-	);
-	});
+		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&TimeBufferDesc,
+				nullptr,
+				&m_timeBuffer
+			)
+		);
+
+		CD3D11_BUFFER_DESC LightBufferDesc(sizeof(LightBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&LightBufferDesc,
+				nullptr,
+				&m_lightBuffer
+			)
+		);
+
+		});
 
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline01_PSTask && createPipeline01_VSTask).then([this]() {
@@ -161,7 +177,7 @@ void P01_Implicit::CreateDeviceDependentResources()
 				&m_indexBuffer
 			)
 		);
-	});
+		});
 
 	// Once the cube is loaded, the object is ready to be rendered.
 	execPipelines.then([this]() {
@@ -172,9 +188,11 @@ void P01_Implicit::CreateDeviceDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void P01_Implicit::Update(DX::StepTimer const& timer)
 {
+	ProcessInput(timer);
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-
 	m_timeBufferData.time = timer.GetTotalSeconds();
+	m_lightBufferData.color = m_waterColor;
+	m_lightBufferData.depth = m_waterDepth;
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -214,6 +232,16 @@ void P01_Implicit::Render()
 		0,
 		NULL,
 		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_lightBuffer.Get(),
+		0,
+		NULL,
+		&m_lightBufferData,
 		0,
 		0,
 		0
@@ -280,14 +308,11 @@ void P01_Implicit::Render()
 
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
 	auto device = m_deviceResources->GetD3DDevice();
 
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	device->CreateRasterizerState(&rasterizerDesc,
-		m_rasterizerState.GetAddressOf());
-
+	device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
 	context->RSSetState(m_rasterizerState.Get());
 
 	// Send the constant buffer to the graphics device.
@@ -311,6 +336,14 @@ void P01_Implicit::Render()
 		2,
 		1,
 		m_timeBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetConstantBuffers1(
+		3,
+		1,
+		m_lightBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);
@@ -339,6 +372,7 @@ void P01_Implicit::ReleaseDeviceDependentResources()
 	m_mvpBuffer.Reset();
 	m_cameraBuffer.Reset();
 	m_timeBuffer.Reset();
+	m_lightBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
@@ -353,4 +387,35 @@ void P01_Implicit::SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view
 void P01_Implicit::SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition)
 {
 	m_cameraBufferData.position = cameraPosition;
+}
+
+void P01_Implicit::ProcessInput(DX::StepTimer const& timer)
+{
+	if (IsKeyPressed(VirtualKey::F9))
+	{
+		XMVECTOR col = XMVectorSet(0.3f, 1.0f, 1.0f, 0.0f);
+		float intensity = 0.5f;
+		XMVECTOR finalCol = XMVectorScale(col, intensity);
+		XMStoreFloat3(&m_waterColor, finalCol);
+		m_waterDepth = 2.5f;
+	}
+
+	if (IsKeyPressed(VirtualKey::F10))
+	{
+		
+		XMVECTOR col = XMVectorSet(0.02, 0.08, 0.2, 0.0f);
+		float intensity = 0.1f;
+		XMVECTOR finalCol = XMVectorScale(col, intensity);
+		XMStoreFloat3(&m_waterColor, finalCol);
+		m_waterDepth = 3.0f;
+	}
+}
+
+bool P01_Implicit::IsKeyPressed(VirtualKey key)
+{
+	auto keyDownState = CoreVirtualKeyStates::Down;
+	auto currentKeyState = CoreWindow::GetForCurrentThread()->GetKeyState(key);
+
+	if ((currentKeyState & keyDownState) == keyDownState) return true;
+	return false;
 }

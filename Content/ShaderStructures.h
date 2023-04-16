@@ -41,8 +41,13 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		DirectX::XMFLOAT3 padding;
 	};
 
+	struct LightBuffer 
+	{
+		DirectX::XMFLOAT3 color;
+		float depth;
+	};
+
 	// Used to send per-vertex data to the vertex shader.
-	
 	struct VertexPosition
 	{
 		DirectX::XMFLOAT3 position;

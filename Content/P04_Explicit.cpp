@@ -11,6 +11,7 @@ using namespace Windows::Foundation;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 P04_Explicit::P04_Explicit(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
+	m_isWireframe(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
 {
@@ -205,6 +206,7 @@ void P04_Explicit::CreateDeviceDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void P04_Explicit::Update(DX::StepTimer const& timer)
 {
+	ProcessInput(timer);
 	DirectX::XMStoreFloat4x4(&m_mvpBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 }
 
@@ -300,15 +302,6 @@ void P04_Explicit::Render()
 	);
 
 	// Rasterization
-	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
-	auto device = m_deviceResources->GetD3DDevice();
-
-	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	device->CreateRasterizerState(&rasterizerDesc,
-		m_rasterizerState.GetAddressOf());
-
 	context->RSSetState(m_rasterizerState.Get());
 
 	// Attach our pixel shader.
@@ -350,4 +343,30 @@ void P04_Explicit::SetViewProjectionMatrixConstantBuffer(DirectX::XMMATRIX& view
 void P04_Explicit::SetCameraPositionConstantBuffer(DirectX::XMFLOAT3& cameraPosition)
 {
 	m_cameraBufferData.position = cameraPosition;
+}
+
+void P04_Explicit::ProcessInput(DX::StepTimer const& timer)
+{
+	if (IsKeyPressed(VirtualKey::F4))
+	{
+		m_isWireframe = !m_isWireframe;
+
+		D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+		rasterizerDesc.CullMode = D3D11_CULL_NONE;
+
+		if (m_isWireframe) rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+		else  rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+
+		auto device = m_deviceResources->GetD3DDevice();
+		device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
+	}
+}
+
+bool P04_Explicit::IsKeyPressed(VirtualKey key)
+{
+	auto keyDownState = CoreVirtualKeyStates::Down;
+	auto currentKeyState = CoreWindow::GetForCurrentThread()->GetKeyState(key);
+
+	if ((currentKeyState & keyDownState) == keyDownState) return true;
+	return false;
 }

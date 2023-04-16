@@ -12,17 +12,24 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
 };
 
-cbuffer CameraConstantBuffer : register(b1)
+cbuffer CameraTrackingBuffer : register(b1)
 {
     float3 cameraPosition;
     float padding;
 }
 
-cbuffer TimeConstantBuffer : register(b2)
+cbuffer ElapsedTimeBuffer : register(b2)
 {
     float time;
     float3 padding2;
 }
+
+cbuffer LightBuffer : register(b3)
+{
+    float3 waterColor;
+    float waterDepth;
+}
+
 
 struct PS_INPUT
 {
@@ -406,8 +413,9 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
 {
     HitObject hObj = RayMarching(ray, MIN_DIST, MAX_DIST);
     float3 lightPos = float3(-1.0, 10.0, 1.0);
-    //float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
-    float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
+    ////float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
+    //float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
+    float3 deepColor = waterColor;
     float3 pixelColor = deepColor;
     
     float3 p = ray.o + hObj.d * ray.d;
@@ -425,10 +433,9 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
     }
     
     // Post processing
-    float scale = 2.5; // For aqua shade 0.9; // For deep shade 3.0;
     
     // Fog
-    float fog = clamp(pow(hObj.d / MAX_DIST * scale, 1.5), 0.0, 1.0);
+    float fog = clamp(pow(hObj.d / MAX_DIST * waterDepth, 1.5), 0.0, 1.0);
     pixelColor = lerp(pixelColor, deepColor, fog);
         
     // God rays

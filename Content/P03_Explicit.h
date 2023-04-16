@@ -73,9 +73,8 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		// Variables used with the rendering loop.
 		float											m_tessellationFactor;
 		float											m_noiseStrength;
-		bool											m_loadingComplete;
 		bool											m_isWireframe;
-
+		bool											m_loadingComplete;
 	};
 }
 
