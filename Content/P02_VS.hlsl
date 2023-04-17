@@ -1,73 +1,54 @@
+#include "MathUtils.hlsli"
+
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
     matrix model;
     matrix view;
     matrix projection;
-    float4 timer;
-    float4 resolution;
 };
 
-static float time = timer.x;
-
-struct VertexShaderInput
+cbuffer TimeConstantBuffer : register(b1)
 {
-    float3 pos : POSITION;
-    float3 color : COLOR0;
+    float elapsedTime;
+    float3 padding2;
 };
 
-struct PixelShaderInput
+struct VS_INPUT
 {
-    float4 pos : SV_POSITION;
-    float3 color : COLOR0;
+    float3 pos      : POSITION;
+    float3 color    : COLOR0;
 };
 
-float3 GradientShade(float3 position)
+struct VS_OUTPUT
 {
-    // Define the start and end colors of the gradient
-    float3 startColor = float3(0.0, 1.0, 1.0); // Blue
-    float3 endColor = float3(1.0, 0.0, 0.0);   // Yellow
+    float4 pos      : SV_POSITION;
+    float3 color    : COLOR0;
+};
 
-    // Calculate the position's distance from the origin
-    float distance = length(position);
-
-    // Normalize the position vector to get a value between 0 and 1
-    float t = saturate(dot(normalize(position), normalize(float3(-1.0, 1.0, 0.0))));
-
-    // Add variation to the colors
-    float3 colorVariationVector = sin(position * 0.6);
-    startColor += colorVariationVector;
-    endColor += colorVariationVector;
-
-    // Interpolate between the start and end colors based on the distance
-    return lerp(startColor, endColor, t);
-}
-
-PixelShaderInput main(VertexShaderInput input)
+VS_OUTPUT main(VS_INPUT input)
 {
-    PixelShaderInput output;
+    VS_OUTPUT output;
 
-    float3 inPos = float4(input.pos, 1.0);
-    inPos.xyz *= float4(1.0, 2.0, 1.0, 1.0);
-    inPos.y += smoothstep(0, 1, cos(inPos.y)) * sin(time);
-    
-    // Create the rotation matrix
-    float c = cos(time * 0.1);
-    float s = sin(time * 0.1);
-    float4x4 rotationMatrix = float4x4(
-        c, 0, -s, 0,
-        0, 1, 0, 0,
-        s, 0, c, 0,
-        0, 0, 0, 1
-    );
+    float4 inPos = float4(input.pos, 1.0);
 
-    inPos = mul(inPos, rotationMatrix);
-   
-    output.pos = mul(inPos, model);
-    output.pos = mul(output.pos, view);
-    output.pos = mul(output.pos, projection);
+	// Transformations
+    float r = 1.0f;
+    inPos.x = r * sin(input.pos.y) * cos(input.pos.x);
+    inPos.y = r * sin(input.pos.y) * sin(input.pos.x) - 2.0;
+    inPos.z = r * cos(input.pos.y * sin(elapsedTime * 0.5));
 
+    // Placement
+    inPos.xyz *= 5.0;
+    inPos.z -= 10.0;
+    inPos.y += 10.0;
+    inPos.x += 20.0;
 
-    output.color = GradientShade(output.pos);
+    // Projection
+    inPos = mul(inPos, view);
+    inPos = mul(inPos, projection);
+
+    output.pos = inPos;
+    output.color = input.color;
 
     return output;
 }

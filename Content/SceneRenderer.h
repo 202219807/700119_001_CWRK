@@ -1,12 +1,25 @@
-﻿#pragma once
+#pragma once
 
 #include "..\Common\DeviceResources.h"
-#include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
+
+#include "ShaderStructures.h"
+
+#include "P01_Implicit.h"
+#include "P02_Explicit.h"
+#include "P03_Explicit.h"
+#include "P04_Explicit.h"
+#include "P05_Explicit.h"
+
+#include "Camera.h"
+
+#include <string>
 
 namespace _202219807_ACW_700119_D3D11_UWP_APP
 {
-	// This sample renderer instantiates a basic rendering pipeline.
+	using namespace Windows::System;
+	using namespace Windows::UI::Core;
+
 	class SceneRenderer
 	{
 	public:
@@ -15,46 +28,34 @@ namespace _202219807_ACW_700119_D3D11_UWP_APP
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
-		void Render(DX::StepTimer const& timer);
-		
-		void StartTracking();
-		void TrackingUpdate(float positionX);
-		void StopTracking();
-		bool IsTracking() { return m_tracking; }
-
+		void Render();
 
 	private:
-		void Rotate(float radians);
+		void ProcessInput(DX::StepTimer const& timer);
+		bool IsKeyPressed(VirtualKey key);
 
 	private:
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources>		    m_deviceResources;
-													    
-		// Direct3D resources for cube geometry.	    
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	    m_inputLayout;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_vertexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_indexBuffer;
-		
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader01;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader01;
-		
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader02;
-		Microsoft::WRL::ComPtr<ID3D11GeometryShader>    m_geometryShader02;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader02;
-		
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	    m_vertexShader03;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	    m_pixelShader03;
+		std::shared_ptr<DX::DeviceResources>				m_deviceResources;
+		std::unique_ptr<P01_Implicit>						m_p01_Implicit;
+		std::unique_ptr<P02_Explicit>						m_p02_Explicit;
+		std::unique_ptr<P03_Explicit>						m_p03_Explicit;
+		std::unique_ptr<P04_Explicit>						m_p04_Explicit;
+		std::unique_ptr<P05_Explicit>						m_p05_Explicit;
+		std::unique_ptr<Camera>								m_camera;
+		DirectX::XMFLOAT4X4									m_projectionMatrix;
 
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		    m_constantBuffer;
-		Microsoft::WRL::ComPtr<ID3D11RasterizerState>   m_RasterizerState;
-
-		// System resources for cube geometry.
-		ModelViewProjectionConstantBuffer				m_constantBufferData;
-		uint32											m_indexCount;
+		// Resources related to text rendering.
+		Microsoft::WRL::ComPtr<ID2D1DrawingStateBlock1>		m_stateBlock;
+		Microsoft::WRL::ComPtr<IDWriteTextFormat2>			m_textFormat;
+		Microsoft::WRL::ComPtr<ID2D1SolidColorBrush>		m_whiteBrush;
+		Microsoft::WRL::ComPtr<IDWriteTextLayout3>			m_textLayout;
+		DWRITE_TEXT_METRICS									m_textMetrics;
 
 		// Variables used with the rendering loop.
-		bool											m_loadingComplete;
-		float											m_degreesPerSecond;
-		bool											m_tracking;
+		bool												m_isExplicitMode;
+		bool												m_isDebugMode;
+		bool												m_showControls;
 	};
 }
+

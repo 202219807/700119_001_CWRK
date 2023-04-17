@@ -7,25 +7,78 @@ using namespace _202219807_ACW_700119_D3D11_UWP_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
+using namespace Microsoft::WRL;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-	m_loadingComplete(false),
-	m_degreesPerSecond(45),
-	m_indexCount(0),
-	m_tracking(false),
-	m_deviceResources(deviceResources)
+	m_deviceResources(deviceResources),
+	m_isExplicitMode(true),
+	m_isDebugMode(false),
+	m_showControls(false)
 {
-	CreateDeviceDependentResources();
+	// Create device independent resources
+	ComPtr<IDWriteTextFormat> textFormat;
+	DX::ThrowIfFailed(
+		m_deviceResources->GetDWriteFactory()->CreateTextFormat(
+			L"Courier New",
+			nullptr,
+			DWRITE_FONT_WEIGHT_MEDIUM,
+			DWRITE_FONT_STYLE_NORMAL,
+			DWRITE_FONT_STRETCH_NORMAL,
+			16.0f,
+			L"en-US",
+			&textFormat
+		)
+	);
+
+	DX::ThrowIfFailed(
+		textFormat.As(&m_textFormat)
+	);
+
+	DX::ThrowIfFailed(
+		m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR)
+	);
+
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD2DFactory()->CreateDrawingStateBlock(&m_stateBlock)
+	);
+
+	m_camera = std::make_unique<Camera>();
+	m_camera->SetPosition(0.0f, -2.5f, -15.5f);
+	m_camera->SetRotation(0.0f, 0.0f, 0.0f);
+
+	m_p01_Implicit = std::unique_ptr<P01_Implicit>(new P01_Implicit(m_deviceResources));
+	m_p02_Explicit = std::unique_ptr<P02_Explicit>(new P02_Explicit(m_deviceResources));
+	m_p03_Explicit = std::unique_ptr<P03_Explicit>(new P03_Explicit(m_deviceResources));
+	m_p04_Explicit = std::unique_ptr<P04_Explicit>(new P04_Explicit(m_deviceResources));
+	m_p05_Explicit = std::unique_ptr<P05_Explicit>(new P05_Explicit(m_deviceResources));
+
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
+	);
+
 	CreateWindowSizeDependentResources();
+}
+
+void SceneRenderer::CreateDeviceDependentResources()
+{
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD2DDeviceContext()->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &m_whiteBrush)
+	);
+
+	m_p01_Implicit->CreateDeviceDependentResources();
+	m_p02_Explicit->CreateDeviceDependentResources();
+	m_p03_Explicit->CreateDeviceDependentResources();
+	m_p04_Explicit->CreateDeviceDependentResources();
+	m_p05_Explicit->CreateDeviceDependentResources();
 }
 
 // Initializes view parameters when the window size changes.
 void SceneRenderer::CreateWindowSizeDependentResources()
 {
-	Size outputSize = m_deviceResources->GetOutputSize();
+	Windows::Foundation::Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
+	float fovAngleY = 70.0f * DirectX::XM_PI / 180.0f;
 
 	// This is a simple example of change that can be made when the app is in
 	// portrait or snapped view.
@@ -34,781 +87,178 @@ void SceneRenderer::CreateWindowSizeDependentResources()
 		fovAngleY *= 2.0f;
 	}
 
-	// Note that the OrientationTransform3D matrix is post-multiplied here
-	// in order to correctly orient the scene to match the display orientation.
-	// This post-multiplication step is required for any draw calls that are
-	// made to the swap chain render target. For draw calls to other targets,
-	// this transform should not be applied.
-
 	// This sample makes use of a right-handed coordinate system using row-major matrices.
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
+	DirectX::XMMATRIX perspectiveMatrix = DirectX::XMMatrixPerspectiveFovRH(
 		fovAngleY,
 		aspectRatio,
 		0.01f,
 		100.0f
 	);
 
-	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
+	DirectX::XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
 
-	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
+	DirectX::XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
 
-	XMStoreFloat4x4(
-		&m_constantBufferData.projection,
-		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
-	);
-
-	// Default: Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	
-	static const XMVECTORF32 eye = { 0.0f, -0.1f, 2.5f, 0.0f }; // dont delete
-	// static const XMVECTORF32 eye = { 0.0f, 3.0f, 1.0f, 0.0f };
-	// static const XMVECTORF32 eye = { 0.0f, -0.1f, 3.5f, 0.0f };
-	
-	// static const XMVECTORF32 at = { 0.0f, 0.7f, 0.0f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
-
+	DirectX::XMStoreFloat4x4(&m_projectionMatrix, perspectiveMatrix * orientationMatrix);
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void SceneRenderer::Update(DX::StepTimer const& timer)
 {
-	if (!m_tracking)
-	{
-		// Convert degrees to radians, then convert seconds to rotation angle
-		float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
-		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
-		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
+	// Update display text.
+	uint32 fps = timer.GetFramesPerSecond();
 
-		Rotate(0.0); // radians;
-	}
+	std::wstring guiHead1 = L"Simulation Controls: ";
 
-	auto context = m_deviceResources->GetD3DDeviceContext();
+	std::wstring guiHead2 = L"Debug info:\n\n ";
 
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.time, time);
+	std::wstring guiContext1 = L"\n\n F1 : Help\n\n F2 : Debug info\n\n F3 : Render only explicit geometry\n\n F4 : Enable wireframe mode\n\n F5 : Decrease tessellation factor\n\n F6 : Increase tessellation factor\n\n F7 : Decrease noise strength\n\n F8 : Increase noise strength\n\n F9 : Day theme\n\n F10 : Night theme\n\n\n ";
 
+	std::wstring guiContext2 =	(fps > 0) ?
 
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
+		std::to_wstring(fps) + L" FPS" +
+		L"\n\n Camera position:\n [" +
+		std::to_wstring(m_camera->GetPosition().x) + L"," +
+		std::to_wstring(m_camera->GetPosition().y) + L"," +
+		std::to_wstring(m_camera->GetPosition().z) + L"]" +
+		L"\n\n Tessellation factor: " + std::to_wstring(m_p03_Explicit->GetTessellationFactor()) + 
+		L"\n\n Noise strength: " + std::to_wstring(m_p03_Explicit->GetNoiseStrength())
+		: L" - FPS";
 
-	int viewportWidth = m_deviceResources->GetOutputSize().Width;
-	int viewportHeight = m_deviceResources->GetOutputSize().Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	std::wstring guiText = L"Press 'F1' to view simulation controls";
+	if (m_showControls) guiText = guiHead1 + guiContext1;
+	if (m_isDebugMode && m_showControls) guiText = guiHead1 + guiContext1 + guiHead2 + guiContext2;
+	
+	Microsoft::WRL::ComPtr<IDWriteTextLayout> textLayout;
+	DX::ThrowIfFailed(
+		m_deviceResources->GetDWriteFactory()->CreateTextLayout(
+			guiText.c_str(),
+			static_cast<uint32>(guiText.length()),
+			m_textFormat.Get(),
+			1000.0f, // Max width of the input text.
+			100.0f,  // Max height of the input text.
+			&textLayout
+		)
+	);
 
-}
+	DX::ThrowIfFailed(
+		textLayout.As(&m_textLayout)
+	);
 
-// Rotate the 3D cube model a set amount of radians.
-void SceneRenderer::Rotate(float radians)
-{
-	// Prepare to pass the updated model matrix to the shader
-	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
-}
+	DX::ThrowIfFailed(
+		m_textLayout->GetMetrics(&m_textMetrics)
+	);
 
-void SceneRenderer::StartTracking()
-{
-	m_tracking = true;
-}
+	ProcessInput(timer);
 
-// When tracking, the 3D cube can be rotated around its Y axis by tracking pointer position relative to the output screen width.
-void SceneRenderer::TrackingUpdate(float positionX)
-{
-	if (m_tracking)
-	{
-		float radians = XM_2PI * 2.0f * positionX / m_deviceResources->GetOutputSize().Width;
-		Rotate(radians);
-	}
-}
+	m_p01_Implicit->Update(timer);
+	m_p02_Explicit->Update(timer);
+	m_p03_Explicit->Update(timer);
+	m_p04_Explicit->Update(timer);
+	m_p05_Explicit->Update(timer);
 
-void SceneRenderer::StopTracking()
-{
-	m_tracking = false;
 }
 
 // Renders one frame using the vertex and pixel shaders.
-void SceneRenderer::Render(DX::StepTimer const& timer)
+void SceneRenderer::Render()
 {
-	// Loading is asynchronous. Only draw geometry after it's loaded.
-	if (!m_loadingComplete)
+	m_camera->Render();
+
+	DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixIdentity();
+	m_camera->GetViewMatrix(viewMatrix);
+
+	if (!m_isExplicitMode)
 	{
-		return;
+		m_p01_Implicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+		m_p01_Implicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+		m_p01_Implicit->Render();
 	}
 
-	auto context = m_deviceResources->GetD3DDeviceContext();
+	m_p02_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p02_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p02_Explicit->Render();
 
-	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
+	m_p03_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p03_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p03_Explicit->Render();
 
-	rasterizerDesc.CullMode = D3D11_CULL_BACK;
-	m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
-		m_RasterizerState.GetAddressOf());
+	m_p04_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p04_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p04_Explicit->Render();
 
-	context->RSSetState(m_RasterizerState.Get());
-	
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
+	m_p05_Explicit->SetViewProjectionMatrixConstantBuffer(viewMatrix, DirectX::XMLoadFloat4x4(&m_projectionMatrix));
+	m_p05_Explicit->SetCameraPositionConstantBuffer(m_camera->GetPosition());
+	m_p05_Explicit->Render();
+
+	ID2D1DeviceContext* context = m_deviceResources->GetD2DDeviceContext();
+	Windows::Foundation::Size logicalSize = m_deviceResources->GetLogicalSize();
+
+	context->SaveDrawingState(m_stateBlock.Get());
+	context->BeginDraw();
+
+	// Position on the bottom right corner
+	D2D1::Matrix3x2F screenTranslation = D2D1::Matrix3x2F::Translation(
+		20,// logicalSize.Width - m_textMetrics.layoutWidth - 10,
+		20 // m_textMetrics.height - 50
 	);
 
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer.GetAddressOf(),
-		&stride,
-		&offset
+	context->SetTransform(screenTranslation * m_deviceResources->GetOrientationTransform2D());
+
+	DX::ThrowIfFailed(
+		m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING)
 	);
 
-	context->IASetIndexBuffer(
-		m_indexBuffer.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
+	context->DrawTextLayout(
+		D2D1::Point2F(0.f, 0.f),
+		m_textLayout.Get(),
+		m_whiteBrush.Get()
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader01.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader01.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Draw the object 1.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-	);
-
-	//rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	//m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
-	//	m_RasterizerState.GetAddressOf());
-
-	//context->RSSetState(m_RasterizerState.Get());
-
-	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	//// Attach our vertex shader.
-	//context->VSSetShader(
-	//	m_vertexShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	//// Send the constant buffer to the graphics device.
-	//context->VSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-
-	//// Attach our geometry shader.
-	//context->GSSetShader(
-	//	m_geometryShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	//// Send the constant buffer to the graphics device.
-	//context->GSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-
-	//// Attach our pixel shader.
-	//context->PSSetShader(
-	//	m_pixelShader02.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	//// Send the constant buffer to the graphics device.
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-
-	//// Draw the object 2.
-	//context->DrawIndexed(
-	//	486,
-	//	0,
-	//	0
-	//);
-
-	rasterizerDesc.CullMode = D3D11_CULL_BACK;
-	m_deviceResources->GetD3DDevice()->CreateRasterizerState(&rasterizerDesc,
-		m_RasterizerState.GetAddressOf());
-
-	context->RSSetState(m_RasterizerState.Get());
-
-	context->UpdateSubresource1(
-			m_constantBuffer.Get(),
-			0,
-			NULL,
-			&m_constantBufferData,
-			0,
-			0,
-			0
-		);
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-	 
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader03.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader03.Get(),
-		nullptr,
-		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	// Draw the object 3.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-	);
-
-}
-
-void SceneRenderer::CreateDeviceDependentResources()
-{
-	// Graphic Pipeline 01:
-	// 
-	// Implicit modeling with signed distance based ray marching
-	// Ocean surface and underwater effects.
-	// Reflective/Refractive Bubbles.
-	// Underwater plantations.
-	// Underwater coral object(Mandelbulb derivate)
-
-	// Load shaders asynchronously.
-	auto loadPipeline01_VSTask = DX::ReadDataAsync(L"P01_VS.cso");
-	auto loadPipeline01_PSTask = DX::ReadDataAsync(L"P01_PS.cso");
-
-	// After the vertex shader file is loaded, create the shader and input layout.
-	auto createPipeline01_VSTask = loadPipeline01_VSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateVertexShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_vertexShader01
-			)
-		);
-
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
-
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateInputLayout(
-				vertexDesc,
-				ARRAYSIZE(vertexDesc),
-				&fileData[0],
-				fileData.size(),
-				&m_inputLayout
-			)
-		);
-		});
-
-	// After the pixel shader file is loaded, create the shader and constant buffer.
-	auto createPipeline01_PSTask = loadPipeline01_PSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_pixelShader01
-			)
-		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
-			)
-		);
-		});
-
-	// Once both shaders are loaded, create the mesh.
-	auto execPipeline01 = (createPipeline01_PSTask && createPipeline01_VSTask).then([this]() {
-
-		// Load mesh vertices. Each vertex has a position and a color.
-		static const VertexPositionColor cubeVertices[] =
-		{
-			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-		};
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = cubeVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc,
-				&vertexBufferData,
-				&m_vertexBuffer
-			)
-		);
-
-		// Load mesh indices. Each trio of indices represents
-		// a triangle to be rendered on the screen.
-		// For example: 0,2,1 means that the vertices with indexes
-		// 0, 2 and 1 from the vertex buffer compose the 
-		// first triangle of this mesh.
-		static const unsigned short cubeIndices[] =
-		{
-			0,2,1, // -x
-			1,2,3,
-
-			4,5,6, // +x
-			5,7,6,
-
-			0,1,5, // -y
-			0,5,4,
-
-			2,6,7, // +y
-			2,7,3,
-
-			0,4,6, // -z
-			0,6,2,
-
-			1,3,7, // +z
-			1,7,5,
-		};
-
-		m_indexCount = ARRAYSIZE(cubeIndices);
-
-		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		indexBufferData.pSysMem = cubeIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc,
-				&indexBufferData,
-				&m_indexBuffer
-			)
-		);
-		});
-
-	// Once the cube is loaded, the object is ready to be rendered.
-	execPipeline01.then([this]() {
-		m_loadingComplete = true;
-		});
-
-	// Graphic Pipeline 02:
-	// 
-	// A shoal of colourful coral reef fish created as a particle system.
-
-	//// Load shaders asynchronously.
-	//auto loadPipeline02_VSTask = DX::ReadDataAsync(L"P02_VS.cso");
-	//auto loadPipeline02_GSTask = DX::ReadDataAsync(L"P02_GS.cso");
-	//auto loadPipeline02_PSTask = DX::ReadDataAsync(L"P02_PS.cso");
-
-	//// After the vertex shader file is loaded, create the shader and input layout.
-	//auto createPipeline02_VSTask = loadPipeline02_VSTask.then([this](const std::vector<byte>& fileData) {
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateVertexShader(
-	//			&fileData[0],
-	//			fileData.size(),
-	//			nullptr,
-	//			&m_vertexShader02
-	//		)
-	//	);
-
-	//	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	//	{
-	//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//	};
-
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateInputLayout(
-	//			vertexDesc,
-	//			ARRAYSIZE(vertexDesc),
-	//			&fileData[0],
-	//			fileData.size(),
-	//			&m_inputLayout
-	//		)
-	//	);
-	//	});
-
-	//// After the geometry shader file is loaded, create the shader and constant buffer.
-	//auto createPipeline02_GSTask = loadPipeline02_GSTask.then([this](const std::vector<byte>& fileData) {
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateGeometryShader(
-	//			&fileData[0],
-	//			fileData.size(),
-	//			nullptr,
-	//			&m_geometryShader02
-	//		)
-	//	);
-
-	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&constantBufferDesc,
-	//			nullptr,
-	//			&m_constantBuffer
-	//		)
-	//	);
-	//	});
-
-	//// After the pixel shader file is loaded, create the shader and constant buffer.
-	//auto createPipeline02_PSTask = loadPipeline02_PSTask.then([this](const std::vector<byte>& fileData) {
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreatePixelShader(
-	//			&fileData[0],
-	//			fileData.size(),
-	//			nullptr,
-	//			&m_pixelShader02
-	//		)
-	//	);
-
-	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&constantBufferDesc,
-	//			nullptr,
-	//			&m_constantBuffer
-	//		)
-	//	);
-	//	});
-
-	//// Once both shaders are loaded, create the mesh.
-	//auto execPipeline02 = (createPipeline02_PSTask && createPipeline02_GSTask && createPipeline02_VSTask).then([this]() {
-
-	//	int m = 10;
-	//	int n = 10;
-
-	//	float w = 10.0f;
-	//	float d = 10.0f;
-
-	//	float halfWidth = 0.5f * w;
-	//	float halfDepth = 0.5f * d;
-
-	//	const auto nVertices = m * n;
-	//	const auto nGridUnit = (m - 1) * (n - 1) * 2;
-
-	//	float dx = w / (n - 1);
-	//	float dz = d / (m - 1);
-
-	//	constexpr float FLOAT_MIN = -10.0f;
-	//	constexpr float FLOAT_MAX = 10.0f;
-
-	//	VertexPositionColor quadVertices[100] = {};
-
-	//	for (int i = 0; i < m; ++i) {
-	//		float z = halfDepth - i * dz;
-	//		for (int j = 0; j < n; ++j) {
-	//			float x = -halfWidth + j * dx;
-	//			// Flat
-	//			quadVertices[i * n + j].pos = XMFLOAT3(x, 0.0f, z);
-
-	//			// White blueprint
-	//			quadVertices[i * n + j].color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-
-	//		}
-	//	};
-
-
-	//	// Create index buffer for m x n grid
-	//	WORD quadIndices[486] = {};
-	//	int k = 0;
-
-	//	for (int i = 0; i < m - 1; ++i) {
-	//		for (int j = 0; j < n - 1; ++j) {
-
-	//			quadIndices[k] = i * n + j;
-	//			quadIndices[k + 1] = i * n + (j + 1);
-	//			quadIndices[k + 2] = (i + 1) * n + j;
-	//			quadIndices[k + 3] = (i + 1) * n + j;
-	//			quadIndices[k + 4] = i * n + (j + 1);
-	//			quadIndices[k + 5] = (i + 1) * n + (j + 1);
-
-	//			k += 6;
-	//		}
-	//	}
-
-	//	
-	//	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-	//	vertexBufferData.pSysMem = quadVertices;
-	//	vertexBufferData.SysMemPitch = 0;
-	//	vertexBufferData.SysMemSlicePitch = 0;
-	//	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&vertexBufferDesc,
-	//			&vertexBufferData,
-	//			&m_vertexBuffer
-	//		)
-	//	);
-
-	//	m_indexCount = ARRAYSIZE(quadIndices);
-
-	//	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-	//	indexBufferData.pSysMem = quadIndices;
-	//	indexBufferData.SysMemPitch = 0;
-	//	indexBufferData.SysMemSlicePitch = 0;
-	//	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
-	//	DX::ThrowIfFailed(
-	//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-	//			&indexBufferDesc,
-	//			&indexBufferData,
-	//			&m_indexBuffer
-	//		)
-	//	);
-	//	});
-
-	//// Once the cube is loaded, the object is ready to be rendered.
-	//execPipeline02.then([this]() {
-	//	m_loadingComplete = true;
-	//	});
-
-	// Graphic Pipeline 03:
-	// 
-	// Underwater coral object generated procedurally using a vertex shader..
-
-	// Load shaders asynchronously.
-	auto loadPipeline03_VSTask = DX::ReadDataAsync(L"P03_VS.cso");
-	auto loadPipeline03_PSTask = DX::ReadDataAsync(L"P03_PS.cso");
-
-	// After the vertex shader file is loaded, create the shader and input layout.
-	auto createPipeline03_VSTask = loadPipeline03_VSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateVertexShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_vertexShader03
-			)
-		);
-
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
-
-
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateInputLayout(
-				vertexDesc,
-				ARRAYSIZE(vertexDesc),
-				&fileData[0],
-				fileData.size(),
-				&m_inputLayout
-			)
-		);
-		});
-
-	// After the pixel shader file is loaded, create the shader and constant buffer.
-	auto createPipeline03_PSTask = loadPipeline03_PSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreatePixelShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_pixelShader03
-			)
-		);
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&constantBufferDesc,
-				nullptr,
-				&m_constantBuffer
-			)
-		);
-		});
-
-	// Once both shaders are loaded, create the mesh.
-	auto execPipeline03 = (createPipeline03_PSTask && createPipeline03_VSTask).then([this]() {
-
-		const UINT numSamples = 100;
-
-		// Load mesh vertices. Each vertex has a position and a color.
-		const UINT vSize = (numSamples - 1) * (numSamples - 1);
-		const UINT iSize = numSamples * numSamples * 2;
-
-		static VertexPositionColor quadVertices[vSize];
-		static unsigned short quadIndices[iSize];
-
-
-		float xStep = XM_2PI / (numSamples - 1);
-		float yStep = XM_PI / (numSamples - 1);
-
-		UINT vertexFlag = 0;
-		UINT indexFlag = 0;
-		for (UINT i = 0; i < numSamples - 1; i++)
-		{
-			float y = i * yStep;
-			for (UINT j = 0; j < numSamples - 1; j++)
-			{
-				if (indexFlag > iSize)
-					break;
-				float x = j * xStep;
-				VertexPositionColor v;
-				v.pos.x = x;
-				v.pos.y = y;
-				v.pos.z = 0;
-				v.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				quadVertices[vertexFlag] = v;
-
-				vertexFlag = vertexFlag + 1;
-
-				unsigned short index0 = i * numSamples + j;
-				unsigned short index1 = index0 + 1;
-				unsigned short index2 = index0 + numSamples;
-				unsigned short index3 = index2 + 1;
-				quadIndices[indexFlag] = index0;
-				quadIndices[indexFlag + 1] = index2;
-				quadIndices[indexFlag + 2] = index1;
-
-				quadIndices[indexFlag + 3] = index1;
-				quadIndices[indexFlag + 4] = index2;
-				quadIndices[indexFlag + 5] = index3;
-
-				indexFlag = indexFlag + 6;
-			}
-		}
-
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = quadVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc,
-				&vertexBufferData,
-				&m_vertexBuffer
-			)
-		);
-
-		m_indexCount = ARRAYSIZE(quadIndices);
-
-		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		indexBufferData.pSysMem = quadIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc,
-				&indexBufferData,
-				&m_indexBuffer
-			)
-		);
-
-		});
-
-	// Once the cube is loaded, the object is ready to be rendered.
-	execPipeline03.then([this]() {
-		m_loadingComplete = true;
-		});
+	HRESULT hr = context->EndDraw();
+	if (hr != D2DERR_RECREATE_TARGET)
+	{
+		DX::ThrowIfFailed(hr);
+	}
+
+	context->RestoreDrawingState(m_stateBlock.Get());
 
 }
 
 void SceneRenderer::ReleaseDeviceDependentResources()
 {
-	m_loadingComplete = false;
-	m_inputLayout.Reset();
-	m_vertexShader01.Reset();
-	m_pixelShader01.Reset();
-	m_vertexShader02.Reset();
-	m_pixelShader02.Reset();
-	m_geometryShader02.Reset();
-	m_vertexShader03.Reset();
-	m_pixelShader03.Reset();
-	m_constantBuffer.Reset();
-	m_vertexBuffer.Reset();
-	m_indexBuffer.Reset();
+	m_whiteBrush.Reset();
+
+	m_p01_Implicit->ReleaseDeviceDependentResources();
+	m_p02_Explicit->ReleaseDeviceDependentResources();
+	m_p03_Explicit->ReleaseDeviceDependentResources();
+	m_p04_Explicit->ReleaseDeviceDependentResources();
+	m_p05_Explicit->ReleaseDeviceDependentResources();
+
+}
+
+void SceneRenderer::ProcessInput(DX::StepTimer const& timer)
+{
+	if (IsKeyPressed(VirtualKey::F1))		m_showControls = !m_showControls;
+	if (IsKeyPressed(VirtualKey::F2))		m_isDebugMode = !m_isDebugMode;
+	if (IsKeyPressed(VirtualKey::F3))		m_isExplicitMode = !m_isExplicitMode;
+	if (IsKeyPressed(VirtualKey::W))		m_camera->MoveForward(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::S))		m_camera->MoveBackward(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::A))		m_camera->MoveLeft(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::D))		m_camera->MoveRight(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Control))  m_camera->AddPositionY(-10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Shift))	m_camera->AddPositionY(10.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Up))		m_camera->AddRotationY(50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Down))		m_camera->AddRotationY(-50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Left))		m_camera->AddRotationX(50.0f * timer.GetElapsedSeconds());
+	if (IsKeyPressed(VirtualKey::Right))	m_camera->AddRotationX(-50.0f * timer.GetElapsedSeconds());
+}
+
+bool SceneRenderer::IsKeyPressed(VirtualKey key)
+{
+	auto keyDownState = CoreVirtualKeyStates::Down;
+	auto currentKeyState = CoreWindow::GetForCurrentThread()->GetKeyState(key);
+
+	if ((currentKeyState & keyDownState) == keyDownState) return true;
+	return false;
+
 }
