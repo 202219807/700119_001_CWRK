@@ -22,17 +22,8 @@ VS_OUTPUT main(VS_INPUT input)
     VS_OUTPUT output;
     
     float4 inPos = float4(input.pos, 1.0);
-    
-    // Transformations
-    inPos.xyz *= 100.0; // 10.0
+    inPos.xyz *= 100.0;
     inPos.z += 25.0;
-    
-    // inPos = float4(sign(inPos.xy), 0, 1);
-    //
-    // or
-    //
-    // inPos = mul(float4(10 * inPos.xy, inPos.zw), model);
-    // inPos = mul(inPos, view);
     inPos = mul(inPos, projection);
     output.pos = inPos;
     

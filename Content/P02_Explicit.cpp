@@ -71,15 +71,6 @@ void P02_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-		CD3D11_BUFFER_DESC CameraBufferDesc(sizeof(CameraTrackingBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&CameraBufferDesc,
-				nullptr,
-				&m_cameraBuffer
-			)
-		);
-
 		CD3D11_BUFFER_DESC TimeBufferDesc(sizeof(ElapsedTimeBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
@@ -93,62 +84,58 @@ void P02_Explicit::CreateDeviceDependentResources()
 	// Once both shaders are loaded, create the mesh.
 	auto execPipelines = (createPipeline02_PSTask && createPipeline02_VSTask).then([this]() {
 
-		// Quad [-1, 1] x [-1, 1] 
-
-		const UINT numSamples = 100;
+		const UINT particles = 100;
 
 		// Load mesh vertices. Each vertex has a position and a color.
-		const UINT vSize = (numSamples - 1) * (numSamples - 1);
-		const UINT iSize = numSamples * numSamples * 2;
+		const UINT vSize = (particles - 1) * (particles - 1);
+		const UINT iSize = particles * particles * 2;
 
-		static VertexPositionColor quadVertices[vSize];
-		static unsigned short quadIndices[iSize];
+		static VertexPositionColor vertices[vSize];
+		static unsigned short indices[iSize];
 
-
-		float xStep = XM_2PI / (numSamples - 1);
-		float yStep = XM_PI / (numSamples - 1);
+		float dx = XM_2PI / (particles - 1);
+		float dy = XM_PI / (particles - 1);
 
 		UINT vertexFlag = 0;
 		UINT indexFlag = 0;
-		for (UINT i = 0; i < numSamples - 1; i++)
+		for (UINT i = 0; i < particles - 1; i++)
 		{
-			float y = i * yStep;
-			for (UINT j = 0; j < numSamples - 1; j++)
+			float y = i * dy;
+			for (UINT j = 0; j < particles - 1; j++)
 			{
 				if (indexFlag > iSize)
 					break;
-				float x = j * xStep;
+				float x = j * dx;
 				VertexPositionColor v;
 				v.pos.x = x;
 				v.pos.y = y;
 				v.pos.z = 0;
 				v.color = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				quadVertices[vertexFlag] = v;
+				vertices[vertexFlag] = v;
 
 				vertexFlag = vertexFlag + 1;
 
-				unsigned short index0 = i * numSamples + j;
+				unsigned short index0 = i * particles + j;
 				unsigned short index1 = index0 + 1;
-				unsigned short index2 = index0 + numSamples;
+				unsigned short index2 = index0 + particles;
 				unsigned short index3 = index2 + 1;
 
-				quadIndices[indexFlag] = index0;
-				quadIndices[indexFlag + 1] = index2;
-				quadIndices[indexFlag + 2] = index1;
-				quadIndices[indexFlag + 3] = index1;
-				quadIndices[indexFlag + 4] = index2;
-				quadIndices[indexFlag + 5] = index3;
+				indices[indexFlag] = index0;
+				indices[indexFlag + 1] = index2;
+				indices[indexFlag + 2] = index1;
+				indices[indexFlag + 3] = index1;
+				indices[indexFlag + 4] = index2;
+				indices[indexFlag + 5] = index3;
 
 				indexFlag = indexFlag + 6;
 			}
 		}
 
-
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = quadVertices;
+		vertexBufferData.pSysMem = vertices;
 		vertexBufferData.SysMemPitch = 0;
 		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
 				&vertexBufferDesc,
@@ -157,13 +144,13 @@ void P02_Explicit::CreateDeviceDependentResources()
 			)
 		);
 
-		m_indexCount = ARRAYSIZE(quadIndices);
+		m_indexCount = ARRAYSIZE(indices);
 
 		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		indexBufferData.pSysMem = quadIndices;
+		indexBufferData.pSysMem = indices;
 		indexBufferData.SysMemPitch = 0;
 		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(indices), D3D11_BIND_INDEX_BUFFER);
 		DX::ThrowIfFailed(
 			m_deviceResources->GetD3DDevice()->CreateBuffer(
 				&indexBufferDesc,
@@ -173,7 +160,7 @@ void P02_Explicit::CreateDeviceDependentResources()
 		);
 		});
 
-	// Once the cube is loaded, the object is ready to be rendered.
+	// Once the particles are loaded, the object is ready to be rendered.
 	execPipelines.then([this]() {
 		m_loadingComplete = true;
 		});
@@ -203,17 +190,6 @@ void P02_Explicit::Render()
 		0,
 		NULL,
 		&m_mvpBufferData,
-		0,
-		0,
-		0
-	);
-
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_cameraBuffer.Get(),
-		0,
-		NULL,
-		&m_cameraBufferData,
 		0,
 		0,
 		0
@@ -271,14 +247,6 @@ void P02_Explicit::Render()
 	context->VSSetConstantBuffers1(
 		1,
 		1,
-		m_cameraBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	context->VSSetConstantBuffers1(
-		2,
-		1,
 		m_timeBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
@@ -307,14 +275,11 @@ void P02_Explicit::Render()
 
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
-
 	auto device = m_deviceResources->GetD3DDevice();
 
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-	device->CreateRasterizerState(&rasterizerDesc,
-		m_rasterizerState.GetAddressOf());
-
+	device->CreateRasterizerState(&rasterizerDesc, m_rasterizerState.GetAddressOf());
 	context->RSSetState(m_rasterizerState.Get());
 
 	// Attach our pixel shader.

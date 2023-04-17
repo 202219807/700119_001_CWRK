@@ -7,13 +7,7 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
 };
 
-cbuffer CameraConstantBuffer : register(b1)
-{
-    float3 cameraPosition;
-    float padding;
-};
-
-cbuffer TimeConstantBuffer : register(b2)
+cbuffer TimeConstantBuffer : register(b1)
 {
     float elapsedTime;
     float3 padding2;
@@ -21,15 +15,14 @@ cbuffer TimeConstantBuffer : register(b2)
 
 struct VS_INPUT
 {
-    float3 pos : POSITION;
-    float3 color : COLOR0;
+    float3 pos      : POSITION;
+    float3 color    : COLOR0;
 };
 
 struct VS_OUTPUT
 {
-    float4 pos : SV_POSITION;
-    float3 color : COLOR0;
-    // float3 normal : TEXCOORD1;
+    float4 pos      : SV_POSITION;
+    float3 color    : COLOR0;
 };
 
 VS_OUTPUT main(VS_INPUT input)
@@ -55,7 +48,7 @@ VS_OUTPUT main(VS_INPUT input)
     inPos = mul(inPos, projection);
 
     output.pos = inPos;
-    output.color = input.color; //float3(0.96, 0.48, 0.10);
+    output.color = input.color;
 
     return output;
 }

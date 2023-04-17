@@ -30,7 +30,6 @@ cbuffer LightBuffer : register(b3)
     float waterDepth;
 }
 
-
 struct PS_INPUT
 {
     float4 pos : SV_POSITION;
@@ -151,9 +150,9 @@ float CoralSDF(float3 p)
     float3 zn = float3(p.xyz);
     float radius = 0.0;
     float hit = 0.0;
-    float n = 12; //9; //12;
+    float n = 12; //9;
     float d = 2.0;
-    for (int i = 0; i < 12; i++) // 12; //18
+    for (int i = 0; i < 12; i++) //18
     {
         radius = sqrt(dot(zn, zn));
         if (radius > 2.0)
@@ -413,10 +412,8 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
 {
     HitObject hObj = RayMarching(ray, MIN_DIST, MAX_DIST);
     float3 lightPos = float3(-1.0, 10.0, 1.0);
-    ////float3 deepColor = float3(0.02, 0.08, 0.2) * 0.1; // -- don't delete. 
-    //float3 deepColor = float3(0.3, 1.0, 1.0) * 0.5;      // -- don't delete.
-    float3 deepColor = waterColor;
-    float3 pixelColor = deepColor;
+ 
+    float3 pixelColor = waterColor;
     
     float3 p = ray.o + hObj.d * ray.d;
     if (hObj.id > 0)
@@ -429,14 +426,14 @@ void Render(Ray ray, out float4 fragColor, in float2 fragCoord)
         float3 K_a = float3(0.1, 0.1, 0.1);
         float3 K_d = float3(0.2, 0.2, 0.2);
         float3 K_s = float3(0.2, 0.2, 0.2);
-        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor; // review
+        pixelColor = PhongIllumination(K_a, K_d, K_s, shininess, p, hObj.d) + texColor; // review //hObj.d -> ray.o or ray.d
     }
     
     // Post processing
     
     // Fog
     float fog = clamp(pow(hObj.d / MAX_DIST * waterDepth, 1.5), 0.0, 1.0);
-    pixelColor = lerp(pixelColor, deepColor, fog);
+    pixelColor = lerp(pixelColor, waterColor, fog);
         
     // God rays
     pixelColor = lerp(pixelColor, float3(0.15, 0.25, 0.3) * 12.0, CastLightBeam(ray.o, ray.d, lightPos, hObj.d));
