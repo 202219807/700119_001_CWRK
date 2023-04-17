@@ -232,16 +232,6 @@ void P04_Explicit::Render()
 		0
 	);
 
-	context->UpdateSubresource1(
-		m_cameraBuffer.Get(),
-		0,
-		NULL,
-		&m_cameraBufferData,
-		0,
-		0,
-		0
-	);
-
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColorNormal);
 	UINT offset = 0;
