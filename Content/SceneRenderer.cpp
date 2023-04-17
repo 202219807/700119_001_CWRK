@@ -12,7 +12,7 @@ using namespace Microsoft::WRL;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 SceneRenderer::SceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources),
-	m_isExplicitMode(true),
+	m_isExplicitMode(false),
 	m_isDebugMode(false),
 	m_showControls(false)
 {
