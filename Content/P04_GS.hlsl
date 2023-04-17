@@ -49,8 +49,8 @@ void main(
     output.pos = mul(output.pos, model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
-    output.normal = faceNormal;
-    output.color = float4((sign(p0.xy) + 1.0) / 2.0, 1.0, 1.0); // float4(1.0, 0.0, 0.0, 1.0); // input[0].color;
+    output.normal = -faceNormal;
+    output.color =  float4((sign(p0.xy) + 1.0) / 2.0, 1.0, 1.0); // float4(1.0, 0.0, 0.0, 1.0); // input[0].color;
     OutputStream.Append(output);
     
     output.pos = float4(m0, 1.0);
@@ -99,7 +99,7 @@ void main(
     output.pos = mul(output.pos, model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
-    output.normal = faceNormal;
+    output.normal = -faceNormal;
     output.color = float4((sign(p0.xy) + 1.0) / 2.0, 1.0, 1.0);
     OutputStream.Append(output);
     
@@ -118,7 +118,7 @@ void main(
     output.pos = mul(output.pos, model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
-    output.normal = faceNormal;
+    output.normal = -faceNormal;
     output.color = float4((sign(p0.xy) + 1.0) / 2.0, 1.0, 1.0);
     OutputStream.Append(output);
     
@@ -126,7 +126,7 @@ void main(
     output.pos = mul(output.pos, model);
     output.pos = mul(output.pos, view);
     output.pos = mul(output.pos, projection);
-    output.normal = -faceNormal;
+    output.normal = faceNormal;
     output.color = float4((sign(p0.xy) + 1.0) / 2.0, 1.0, 1.0);
     OutputStream.Append(output);
     
